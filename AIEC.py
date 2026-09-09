@@ -1,6 +1,4 @@
-Here is the complete, single-file code for **`AIEC.py`** including all features (10 question types, Teacher Mode, PDF downloads, practice widgets, auto-grading, and sidebar exam history):
 
-```python
 import streamlit as st
 import tempfile
 import os
@@ -737,4 +735,4 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
             st.markdown(f"**Correct Answer / Criteria:** {q.get('correct_answer')}")
             st.markdown(f"**Your Answer:** {st.session_state.get('exam_answers', {}).get(i, '*No Answer Provided*')}")
             st.info(f"**Feedback:** {g_info.get('feedback', 'No detailed feedback.')}")
-```
+
