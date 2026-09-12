@@ -1,0 +1,51 @@
+# ══════════════════════════════════════════════════════════════════════════
+# AIEC — AI Exam Creator: Navy / Gold theme (matches logo.png)
+# This file must live at  .streamlit/config.toml  next to app.py.
+# Using Streamlit's native theming engine (not CSS hacks) means:
+#   - it survives Streamlit version upgrades
+#   - it automatically covers buttons, checkboxes, sliders, alerts,
+#     dataframes, expanders, popovers, etc. with correct contrast
+#   - the user can flip between the light and dark variant from the
+#     "⋮" menu → Settings → Theme, and both will look correct
+# ══════════════════════════════════════════════════════════════════════════
+
+[theme]
+font = "sans serif"
+baseRadius = "medium"
+showSidebarBorder = true
+
+# ── Light mode (main app) ───────────────────────────────────────────────
+[theme.light]
+primaryColor = "#A6790E"            # deep gold — buttons, focus rings, sliders
+backgroundColor = "#F7F8FA"         # soft off-white app background
+secondaryBackgroundColor = "#EEF1F6" # input/widget backgrounds, code blocks
+textColor = "#16304F"               # navy body text
+linkColor = "#16304F"
+borderColor = "#D8DEE8"
+
+# ── Light mode (sidebar) — navy panel with gold accents, like the logo ──
+[theme.light.sidebar]
+backgroundColor = "#16304F"
+secondaryBackgroundColor = "#0D2036"
+textColor = "#F5F6F8"
+primaryColor = "#D4A72C"
+linkColor = "#F2C94C"
+borderColor = "#2C4A70"
+
+# ── Dark mode (main app) ─────────────────────────────────────────────────
+[theme.dark]
+primaryColor = "#A6790E"
+backgroundColor = "#0D1B2A"
+secondaryBackgroundColor = "#16304F"
+textColor = "#F5F6F8"
+linkColor = "#F2C94C"
+borderColor = "#2C4A70"
+
+# ── Dark mode (sidebar) ──────────────────────────────────────────────────
+[theme.dark.sidebar]
+backgroundColor = "#0A1626"
+secondaryBackgroundColor = "#16304F"
+textColor = "#F5F6F8"
+primaryColor = "#D4A72C"
+linkColor = "#F2C94C"
+borderColor = "#2C4A70"
