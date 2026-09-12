@@ -269,22 +269,15 @@ def build_pdf(exam_data: dict, include_answers: bool = False) -> bytes:
 # ══════════════════════════════════════════════════════════════════════════════
 # PAGE CONFIG
 # ══════════════════════════════════════════════════════════════════════════════
-try:
-    st.image("logo.png", width=2500, use_container_width=False)
-except:
-    pass # Catch missing logo gracefully locally
-st.set_page_config(layout="wide", page_title="AIEC, Your Exam Creator", page_icon="📝")
+st.image("logo.png", width=2500, use_container_width=False)
+st.set_page_config(layout="wide", page_title="AIEC, Your Exam Creator", page_icon="logo.png")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SIDEBAR CONFIGURATION
 # ══════════════════════════════════════════════════════════════════════════════
 
-raw_api_key = st.sidebar.text_input("Enter your Gemini API Key", type="password")
-api_key = raw_api_key.strip() if raw_api_key else ""
-# Fallback to secrets if empty
-if not api_key and "GEMINI_API_KEY" in st.secrets:
-    api_key = st.secrets["GEMINI_API_KEY"]
+api_key = st.sidebar.text_input("Enter your Gemini API Key", type="password")
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🎭 Mode")
@@ -458,7 +451,7 @@ if not has_active_exam:
 
                 try:
                     response = client.models.generate_content(
-                        model='gemini-2.0-flash',
+                        model='gemini-3.6-flash',
                         contents=contents,
                         config=types.GenerateContentConfig(
                             response_mime_type="application/json",
@@ -687,7 +680,7 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
                             )
                             try:
                                 resp = client.models.generate_content(
-                                    model='gemini-2.0-flash',
+                                    model='gemini-3.6-flash',
                                     contents=regen_prompt,
                                     config=types.GenerateContentConfig(
                                         response_mime_type="application/json",
@@ -724,7 +717,7 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
             with st.spinner("Grading your submission with Gemini..."):
                 try:
                     g_resp = client.models.generate_content(
-                        model='gemini-2.0-flash',
+                        model='gemini-3.6-flash',
                         contents=grade_prompt,
                         config=types.GenerateContentConfig(
                             response_mime_type="application/json",
@@ -793,4 +786,4 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
             st.markdown(f"**Question:** {q.get('question_text')}")
             st.markdown(f"**Correct Answer / Criteria:** {q.get('correct_answer')}")
             st.markdown(f"**Your Answer:** {st.session_state.get('exam_answers', {}).get(i, '*No Answer Provided*')}")
-            st.info(f"**Feedback:** {g_info.get('feedback', 'No detailed feedback.')}")
+            st.info(f"**Feedback:** {g_info.get('feedback', 'No detailed feedback.')}") 
