@@ -12,7 +12,7 @@ from typing import List, Optional
 from fpdf import FPDF
 
 # ══════════════════════════════════════════════════════════════════════════════
-# PAGE CONFIG (Must be the first Streamlit command)
+# PAGE CONFIG & SECRETS
 # ══════════════════════════════════════════════════════════════════════════════
 APP_DIR = Path(__file__).parent
 LOGO_PATH = APP_DIR / "logo.png"
@@ -23,6 +23,13 @@ st.set_page_config(
     page_title="AIEC — AI Exam Creator", 
     page_icon=str(LOGO_PATH) if HAS_LOGO else "📝"
 )
+
+# Safely retrieve the API key from .streamlit/secrets.toml
+try:
+    API_KEY = st.secrets["GEMINI_API_KEY"]
+except (KeyError, FileNotFoundError):
+    API_KEY = None
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # DATA MODELS
@@ -103,6 +110,7 @@ def save_to_history(exam_data: dict, results: dict = None, entry_id: str = None)
 def delete_history_entry(entry_id: str):
     history = [h for h in load_history() if h.get("id") != entry_id]
     HISTORY_FILE.write_text(json.dumps(history, indent=2))
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PDF HELPERS
@@ -232,10 +240,6 @@ def build_pdf(exam_data: dict, include_answers: bool = False) -> bytes:
 # SIDEBAR CONFIGURATION
 # ══════════════════════════════════════════════════════════════════════════════
 
-st.sidebar.markdown("### 🔑 API Configuration")
-api_key = st.sidebar.text_input("Gemini API Key", type="password")
-
-st.sidebar.markdown("---")
 st.sidebar.markdown("### 🎭 Mode")
 teacher_mode = st.sidebar.toggle("Teacher Mode", value=False, key="sidebar_teacher_mode", help="Shows full mark schemes, inline correct answers, and criteria.")
 
@@ -334,10 +338,10 @@ if not has_active_exam:
             file2 = st.file_uploader("Past papers", label_visibility="hidden", key="file2_pastpapers", accept_multiple_files=True, max_upload_size=100000)
 
     if st.button("Generate Exam Paper", key="btn_generate_exam", use_container_width=True, type="primary"):
-        if not api_key:
-            st.error("Please enter your Gemini API Key in the sidebar.")
+        if not API_KEY:
+            st.error("API Key not found. Please add GEMINI_API_KEY to your .streamlit/secrets.toml file.")
         else:
-            client = genai.Client(api_key=api_key)
+            client = genai.Client(api_key=API_KEY)
             all_files = []
 
             def save_file(uploaded):
@@ -607,10 +611,10 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
             with st.popover("⚙️ Question Actions"):
                 regen_inst = st.text_input("Instructions for regeneration:", key=f"regen_inst_{i}", placeholder="e.g. Make it harder")
                 if st.button("🔄 Regenerate This Question", key=f"btn_regen_{i}"):
-                    if not api_key:
-                        st.error("Gemini API key is required in the sidebar.")
+                    if not API_KEY:
+                        st.error("API Key not found in .streamlit/secrets.toml.")
                     else:
-                        client = genai.Client(api_key=api_key)
+                        client = genai.Client(api_key=API_KEY)
                         with st.spinner("Regenerating question..."):
                             regen_prompt = (
                                 f"Regenerate question Q{i+1} from this exam. "
@@ -640,10 +644,10 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
 
     st.markdown("---")
     if st.button("📊 Submit & Grade Exam Paper", key="btn_submit_grade", use_container_width=True, type="primary"):
-        if not api_key:
-            st.error("Please enter your Gemini API Key in the sidebar.")
+        if not API_KEY:
+            st.error("API Key not found. Please add GEMINI_API_KEY to your .streamlit/secrets.toml file.")
         else:
-            client = genai.Client(api_key=api_key)
+            client = genai.Client(api_key=API_KEY)
             answers = st.session_state.get("exam_answers", {})
             
             grade_prompt = (
