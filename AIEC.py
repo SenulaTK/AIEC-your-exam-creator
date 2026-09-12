@@ -1,11 +1,12 @@
-
 import streamlit as st
+import streamlit.components.v1 as components
 import tempfile
 import os
 import uuid
 import json
 import math
 import datetime
+import time
 from pathlib import Path
 from google import genai
 from google.genai import types
@@ -26,7 +27,6 @@ class Question(BaseModel):
     difficulty: Optional[str] = Field(default=None, description="'easy', 'medium', or 'hard'.")
     marks: int = Field(default=2, description="Marks allocated for this question.")
     
-    # Specific fields for different question types
     options: Optional[List[str]] = Field(default=None, description="List of options for MCQ.")
     left_items: Optional[List[str]] = Field(default=None, description="Left column items for matching.")
     right_items: Optional[List[str]] = Field(default=None, description="Right column items for matching (shuffled).")
@@ -51,6 +51,56 @@ class GradedQuestion(BaseModel):
 
 class GradingResponse(BaseModel):
     graded_questions: List[GradedQuestion]
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TIMER HELPER
+# ══════════════════════════════════════════════════════════════════════════════
+
+def render_countdown_timer(minutes: int):
+    if "exam_start_timestamp" not in st.session_state or st.session_state["exam_start_timestamp"] is None:
+        st.session_state["exam_start_timestamp"] = datetime.datetime.now().timestamp()
+
+    elapsed_seconds = datetime.datetime.now().timestamp() - st.session_state["exam_start_timestamp"]
+    total_seconds = minutes * 60
+    remaining_seconds = max(0, int(total_seconds - elapsed_seconds))
+
+    timer_html = f"""
+    <div id="timer-box" style="
+        font-family: sans-serif;
+        font-size: 20px;
+        font-weight: bold;
+        color: #d9534f;
+        background-color: #fdf2f2;
+        border: 2px solid #d9534f;
+        border-radius: 8px;
+        padding: 10px 15px;
+        text-align: center;
+        margin-bottom: 15px;
+    ">
+        ⏱️ Time Remaining: <span id="timer-display">--:--</span>
+    </div>
+    <script>
+        var secondsLeft = {remaining_seconds};
+        function updateTimer() {{
+            var mins = Math.floor(secondsLeft / 60);
+            var secs = secondsLeft % 60;
+            if (secs < 10) secs = "0" + secs;
+            if (mins < 10) mins = "0" + mins;
+            
+            document.getElementById('timer-display').innerHTML = mins + ":" + secs;
+            if (secondsLeft <= 0) {{
+                document.getElementById('timer-box').innerHTML = "⌛ TIME IS UP! Please submit your exam.";
+                document.getElementById('timer-box').style.backgroundColor = "#ff0000";
+                document.getElementById('timer-box').style.color = "#ffffff";
+            }} else {{
+                secondsLeft--;
+            }}
+        }}
+        updateTimer();
+        setInterval(updateTimer, 1000);
+    </script>
+    """
+    components.html(timer_html, height=75)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # HISTORY HELPERS
@@ -201,7 +251,7 @@ def build_pdf(exam_data: dict, include_answers: bool = False) -> bytes:
             for _ in range(6):
                 pdf.cell(0, 8, "", border="B", new_x="LMARGIN", new_y="NEXT")
 
-        else: # short_answer, written, fill_blank
+        else:
             for _ in range(3):
                 pdf.cell(0, 8, "", border="B", new_x="LMARGIN", new_y="NEXT")
 
@@ -219,9 +269,9 @@ def build_pdf(exam_data: dict, include_answers: bool = False) -> bytes:
 # ══════════════════════════════════════════════════════════════════════════════
 # PAGE CONFIG
 # ══════════════════════════════════════════════════════════════════════════════
+st.image("logo.png", width=2500, use_container_width=False)
+st.set_page_config(layout="wide", page_title="AIEC, Your Exam Creator", page_icon="logo.png")
 
-st.set_page_config(layout="wide", page_title="AIEC - Exam Creator")
-st.markdown('<h1 style="text-align:center;">AIEC, Your Exam Creator</h1>', unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SIDEBAR CONFIGURATION
@@ -236,14 +286,12 @@ teacher_mode = st.sidebar.toggle("Teacher Mode", value=False, help="Shows full m
 st.sidebar.markdown("---")
 st.sidebar.markdown("### ⚙️ Paper Settings")
 
-# Difficulty
 diff_auto = st.sidebar.checkbox("Auto Difficulty (AI Decides)", value=True)
 if diff_auto:
     selected_difficulty = "Auto"
 else:
     selected_difficulty = st.sidebar.selectbox("Difficulty Level", ["Easy", "Medium", "Hard"])
 
-# Question counts & mix
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 📋 Question Counts & Types")
 q_count_auto = st.sidebar.checkbox("Auto Question Mix (AI Decides)", value=True)
@@ -263,7 +311,6 @@ else:
     n_true_false = st.sidebar.slider("True / False", 0, 10, 2)
     n_other = st.sidebar.slider("Other (Ordering/Calc/Labeling)", 0, 5, 1)
 
-# Timer / Time limit
 st.sidebar.markdown("---")
 st.sidebar.markdown("### ⏱️ Exam Timer")
 timer_auto = st.sidebar.checkbox("Auto Time Limit (AI Decides)", value=True)
@@ -297,6 +344,7 @@ else:
                     st.session_state["exam_paper"] = h.get("exam")
                     st.session_state["grading_result"] = h.get("results")
                     st.session_state["active_exam_id"] = h_id
+                    st.session_state["exam_start_timestamp"] = datetime.datetime.now().timestamp()
                     st.rerun()
             with c_del:
                 if st.button("Delete", key=f"sb_del_{h_id}", use_container_width=True):
@@ -320,15 +368,15 @@ if not has_active_exam:
     Col2, Col3, Col4 = st.columns(3)
 
     with Col2:
-        with st.container(border=True, height=500):
+        with st.container(border=True):
             st.write("Upload your course work (SoW, Notes, Images, etc)")
             file1 = st.file_uploader("Course work", label_visibility="hidden", key="file1", accept_multiple_files=True, max_upload_size=100000)
     with Col3:
-        with st.container(border=True, height=500):
+        with st.container(border=True):
             st.write("Upload your mark scheme for each past paper.")
             file3 = st.file_uploader("Mark scheme", label_visibility="hidden", key="file3", accept_multiple_files=True, max_upload_size=100000)
     with Col4:
-        with st.container(border=True, height=500):
+        with st.container(border=True):
             st.write("Upload your past papers here for structure and layout.")
             file2 = st.file_uploader("Past papers", label_visibility="hidden", key="file2", accept_multiple_files=True, max_upload_size=100000)
 
@@ -417,6 +465,7 @@ if not has_active_exam:
                     st.session_state["time_limit_mins"] = (
                         exam_time_limit_mins if not timer_auto else max(15, len(exam.get("questions", [])) * 4)
                     )
+                    st.session_state["exam_start_timestamp"] = datetime.datetime.now().timestamp()
                     e_id = save_to_history(exam)
                     st.session_state["active_exam_id"] = e_id
                     st.success("Exam paper generated successfully!")
@@ -432,6 +481,7 @@ else:
             st.session_state["exam_paper"] = None
             st.session_state["grading_result"] = None
             st.session_state["active_exam_id"] = None
+            st.session_state["exam_start_timestamp"] = None
             st.rerun()
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -449,6 +499,9 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
 
     t_limit = st.session_state.get("time_limit_mins", 45)
     st.caption(f"⏱️ **Recommended Time Limit:** {t_limit} minutes")
+
+    if not teacher_mode:
+        render_countdown_timer(t_limit)
 
     col_dl1, col_dl2 = st.columns(2)
     with col_dl1:
@@ -611,7 +664,6 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
                 ans_text = st.text_area("Type your answer:", key=f"ans_written_{i}", height=90)
                 st.session_state["exam_answers"][i] = ans_text
 
-            # Single Question Regenerate Button
             with st.popover("⚙️ Question Actions"):
                 regen_inst = st.text_input("Instructions for regeneration:", key=f"regen_inst_{i}", placeholder="e.g. Make it harder")
                 if st.button("🔄 Regenerate This Question", key=f"btn_regen_{i}"):
@@ -735,4 +787,3 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
             st.markdown(f"**Correct Answer / Criteria:** {q.get('correct_answer')}")
             st.markdown(f"**Your Answer:** {st.session_state.get('exam_answers', {}).get(i, '*No Answer Provided*')}")
             st.info(f"**Feedback:** {g_info.get('feedback', 'No detailed feedback.')}")
-
