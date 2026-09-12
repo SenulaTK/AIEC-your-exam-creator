@@ -838,7 +838,7 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
             st.markdown(f"**Question:** {q.get('question_text')}")
             st.markdown(f"**Correct Answer / Criteria:** {q.get('correct_answer')}")
             st.markdown(f"**Your Answer:** {st.session_state.get('exam_answers', {}).get(i, '*No Answer Provided*')}")
-            st.info(f"**Feedback:** {g_info.get('feedback', 'No detailed feedback.')}")    remaining_seconds = max(0, int(total_seconds - elapsed_seconds))
+           # st.info(f"**Feedback:** {g_info.get('feedback', 'No detailed feedback.')}")    remaining_seconds = max(0, int(total_seconds - elapsed_seconds))
 
     timer_html = f"""
     <div id="timer-box" style="
