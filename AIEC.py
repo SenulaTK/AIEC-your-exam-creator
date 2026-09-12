@@ -232,9 +232,7 @@ def build_pdf(exam_data: dict, include_answers: bool = False) -> bytes:
 # SIDEBAR CONFIGURATION
 # ══════════════════════════════════════════════════════════════════════════════
 
-api_key = st.sidebar.text_input("Enter your Gemini API Key", type="password", key="sidebar_api_key")
 
-st.sidebar.markdown("---")
 st.sidebar.markdown("### 🎭 Mode")
 teacher_mode = st.sidebar.toggle("Teacher Mode", value=False, key="sidebar_teacher_mode", help="Shows full mark schemes, inline correct answers, and criteria.")
 
@@ -642,7 +640,7 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
         if not api_key:
             st.error("Please enter your Gemini API Key in the sidebar.")
         else:
-            client = genai.Client(api_key=api_key)
+            client = genai.Client(api_key="AQ.Ab8RN6KHNsB3vM-GIpOwqqQn8IFkUO6KjzdH06DUojTIdi5ckg")
             answers = st.session_state.get("exam_answers", {})
             
             grade_prompt = (
