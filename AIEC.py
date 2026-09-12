@@ -25,7 +25,7 @@ st.set_page_config(
 )
 
 # Safely retrieve the API key string from .streamlit/secrets.toml
-API_KEY = st.secrets["GEMINI_API_KEY"]
+API_KEY = "AQ.Ab8RN6KHNsB3vM-GIpOwqqQn8IFkUO6KjzdH06DUojTIdi5ckg"
 
 
 # ══════════════════════════════════════════════════════════════════════════════
