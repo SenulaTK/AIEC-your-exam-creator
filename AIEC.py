@@ -277,7 +277,7 @@ st.set_page_config(layout="wide", page_title="AIEC, Your Exam Creator", page_ico
 # SIDEBAR CONFIGURATION
 # ══════════════════════════════════════════════════════════════════════════════
 
-api_key = st.sidebar.text_input("Enter your Gemini API Key", type="password")
+api_key = "AQ.Ab8RN6JS8Epe_B2IGLfNMLQSNXPmVyznWJwHQeSLzRmAFb0Jgg" 
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🎭 Mode")
