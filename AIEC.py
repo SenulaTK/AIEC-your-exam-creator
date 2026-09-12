@@ -25,7 +25,8 @@ st.set_page_config(
 )
 
 # Safely retrieve the API key string from .streamlit/secrets.toml
-API_KEY = st.secrets["GEMINI_API_KEY"]
+API_KEY = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # DATA MODELS
