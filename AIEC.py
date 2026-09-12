@@ -112,7 +112,7 @@ HISTORY_FILE = Path(__file__).parent / "aiec_exam_history.json"
 def load_history() -> list:
     if HISTORY_FILE.exists():
         try:
-            return json.loads(HISTORY_FILE.read_text())
+            return json.loads(HISTORY_FILE.read_text(encoding="utf-8"))
         except Exception:
             return []
     return []
@@ -143,6 +143,33 @@ def save_to_history(exam_data: dict, results: dict = None, entry_id: str = None)
 def delete_history_entry(entry_id: str):
     history = [h for h in load_history() if h.get("id") != entry_id]
     HISTORY_FILE.write_text(json.dumps(history, indent=2))
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TEXT SANITIZING
+# Browsers/word processors love auto-substituting "smart" punctuation (em
+# dashes, curly quotes, ellipses) into free-typed text. That's normally
+# harmless, but it's the most common source of a stray UnicodeEncodeError
+# ('ascii' codec can't encode character ...) surfacing deep inside a
+# third-party HTTP/SDK call. We normalize any user-typed prompt text to
+# plain ASCII punctuation before it goes anywhere near the API.
+# ══════════════════════════════════════════════════════════════════════════════
+
+_SMART_PUNCT_MAP = {
+    '\u2014': '-', '\u2013': '-',            # em dash, en dash
+    '\u2018': "'", '\u2019': "'",            # curly single quotes
+    '\u201c': '"', '\u201d': '"',            # curly double quotes
+    '\u2026': '...',                          # ellipsis
+    '\u00a0': ' ',                            # non-breaking space
+}
+
+def sanitize_text(text: Optional[str]) -> str:
+    if not text:
+        return ""
+    for orig, repl in _SMART_PUNCT_MAP.items():
+        text = text.replace(orig, repl)
+    # Belt-and-braces: strip anything else outside the ASCII range rather
+    # than let it reach a codepath that assumes ASCII-only text.
+    return text.encode("ascii", "ignore").decode("ascii")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PDF HELPERS
@@ -477,7 +504,7 @@ if not has_active_exam:
                     prompt += f"Target time limit: {exam_time_limit_mins} minutes.\n"
 
                 if input1:
-                    prompt += f"\nUser instructions: {input1}\n"
+                    prompt += f"\nUser instructions: {sanitize_text(input1)}\n"
 
                 contents = all_files + [prompt]
 
@@ -503,6 +530,13 @@ if not has_active_exam:
                     st.session_state["active_exam_id"] = e_id
                     st.success("Exam paper generated successfully!")
                     st.rerun()
+                except UnicodeEncodeError:
+                    st.error(
+                        "Error generating exam paper: one of your uploaded files or typed instructions "
+                        "contains a special character (like a smart em dash '—' or curly quote) that the "
+                        "upload pipeline couldn't handle. Try removing unusual punctuation from the prompt "
+                        "box, or re-saving the file as plain text/UTF-8, then generate again."
+                    )
                 except Exception as e:
                     st.error(f"Error generating exam paper: {e}")
 else:
@@ -717,7 +751,7 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
                             regen_prompt = (
                                 f"Regenerate question Q{i+1} from this exam. "
                                 f"Existing question: {json.dumps(q)}. "
-                                f"User instructions: {regen_inst if regen_inst else 'Provide a fresh alternative question on the same topic'}. "
+                                f"User instructions: {sanitize_text(regen_inst) if regen_inst else 'Provide a fresh alternative question on the same topic'}. "
                                 f"Return JSON matching Question schema."
                             )
                             try:
@@ -733,6 +767,8 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
                                 exam["questions"][i] = new_q
                                 st.session_state["exam_paper"] = exam
                                 st.rerun()
+                            except UnicodeEncodeError:
+                                st.error("Failed to regenerate: your instructions contain a special character (like an em dash or curly quote) that caused an encoding issue. Try plain punctuation and retry.")
                             except Exception as ex:
                                 st.error(f"Failed to regenerate: {ex}")
 
@@ -744,7 +780,8 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
     def run_grading(exam_to_grade: dict, key: str) -> bool:
         """Grades the current answers with Gemini and saves the result. Returns True on success."""
         client = genai.Client(api_key=key)
-        answers = st.session_state.get("exam_answers", {})
+        raw_answers = st.session_state.get("exam_answers", {})
+        answers = {k: (sanitize_text(v) if isinstance(v, str) else v) for k, v in raw_answers.items()}
 
         grade_prompt = (
             "You are an impartial academic examiner. Grade the student's exam submission against the original mark scheme and correct answers.\n\n"
@@ -768,6 +805,9 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
             active_id = st.session_state.get("active_exam_id")
             save_to_history(exam_to_grade, graded_data, entry_id=active_id)
             return True
+        except UnicodeEncodeError:
+            st.error("Error grading exam paper: one of the answers contains a special character (like an em dash or curly quote) that caused an encoding issue. Please retry — this has been sanitized for next time.")
+            return False
         except Exception as ex:
             st.error(f"Error grading exam paper: {ex}")
             return False
