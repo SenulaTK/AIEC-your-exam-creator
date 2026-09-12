@@ -24,8 +24,9 @@ st.set_page_config(
     page_icon=str(LOGO_PATH) if HAS_LOGO else "📝"
 )
 
-# Safely retrieve the API key from .streamlit/secrets.toml
-API_KEY = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+# Safely retrieve the API key string from .streamlit/secrets.toml
+API_KEY = st.secrets["GEMINI_API_KEY"]
+
 # ══════════════════════════════════════════════════════════════════════════════
 # DATA MODELS
 # ══════════════════════════════════════════════════════════════════════════════
