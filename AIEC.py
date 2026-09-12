@@ -331,7 +331,7 @@ if not has_active_exam:
             file2 = st.file_uploader("Past papers", label_visibility="hidden", key="file2_pastpapers", accept_multiple_files=True, max_upload_size=100000)
 
     if st.button("Generate Exam Paper", key="btn_generate_exam", use_container_width=True, type="primary")
-            client = genai.Client(api_key=api_key)
+            client = genai.Client(api_key="AQ.Ab8RN6KHNsB3vM-GIpOwqqQn8IFkUO6KjzdH06DUojTIdi5ckg")
             all_files = []
 
             def save_file(uploaded):
