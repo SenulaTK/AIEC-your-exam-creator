@@ -113,7 +113,7 @@ def clean_pdf_text(text: str) -> str:
         return ""
     replacements = {
         '“': '"', '”': '"', '‘': "'", '’': "'",
-        '—': '-', '–': '-', '…': '...', '•': '*', '–': '-'
+        '—': '-', '–': '-', '…': '...', '•': '*'
     }
     for orig, repl in replacements.items():
         text = text.replace(orig, repl)
@@ -232,7 +232,10 @@ def build_pdf(exam_data: dict, include_answers: bool = False) -> bytes:
 # SIDEBAR CONFIGURATION
 # ══════════════════════════════════════════════════════════════════════════════
 
+st.sidebar.markdown("### 🔑 API Configuration")
+api_key = st.sidebar.text_input("Gemini API Key", type="password")
 
+st.sidebar.markdown("---")
 st.sidebar.markdown("### 🎭 Mode")
 teacher_mode = st.sidebar.toggle("Teacher Mode", value=False, key="sidebar_teacher_mode", help="Shows full mark schemes, inline correct answers, and criteria.")
 
@@ -330,8 +333,11 @@ if not has_active_exam:
             st.write("Upload your past papers here for structure and layout.")
             file2 = st.file_uploader("Past papers", label_visibility="hidden", key="file2_pastpapers", accept_multiple_files=True, max_upload_size=100000)
 
-    if st.button("Generate Exam Paper", key="btn_generate_exam", use_container_width=True, type="primary")
-            client = genai.Client(api_key="AQ.Ab8RN6KHNsB3vM-GIpOwqqQn8IFkUO6KjzdH06DUojTIdi5ckg")
+    if st.button("Generate Exam Paper", key="btn_generate_exam", use_container_width=True, type="primary"):
+        if not api_key:
+            st.error("Please enter your Gemini API Key in the sidebar.")
+        else:
+            client = genai.Client(api_key=api_key)
             all_files = []
 
             def save_file(uploaded):
@@ -393,7 +399,7 @@ if not has_active_exam:
 
                 try:
                     response = client.models.generate_content(
-                        model='gemini-3.6-flash',
+                        model='gemini-2.5-flash',
                         contents=contents,
                         config=types.GenerateContentConfig(
                             response_mime_type="application/json",
@@ -602,7 +608,7 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
                 regen_inst = st.text_input("Instructions for regeneration:", key=f"regen_inst_{i}", placeholder="e.g. Make it harder")
                 if st.button("🔄 Regenerate This Question", key=f"btn_regen_{i}"):
                     if not api_key:
-                        st.error("Gemini API key is required.")
+                        st.error("Gemini API key is required in the sidebar.")
                     else:
                         client = genai.Client(api_key=api_key)
                         with st.spinner("Regenerating question..."):
@@ -614,7 +620,7 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
                             )
                             try:
                                 resp = client.models.generate_content(
-                                    model='gemini-3.6-flash',
+                                    model='gemini-2.5-flash',
                                     contents=regen_prompt,
                                     config=types.GenerateContentConfig(
                                         response_mime_type="application/json",
@@ -637,7 +643,7 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
         if not api_key:
             st.error("Please enter your Gemini API Key in the sidebar.")
         else:
-            client = genai.Client(api_key="AQ.Ab8RN6KHNsB3vM-GIpOwqqQn8IFkUO6KjzdH06DUojTIdi5ckg")
+            client = genai.Client(api_key=api_key)
             answers = st.session_state.get("exam_answers", {})
             
             grade_prompt = (
@@ -651,7 +657,7 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
             with st.spinner("Grading your submission with Gemini..."):
                 try:
                     g_resp = client.models.generate_content(
-                        model='gemini-3.6-flash',
+                        model='gemini-2.5-flash',
                         contents=grade_prompt,
                         config=types.GenerateContentConfig(
                             response_mime_type="application/json",
