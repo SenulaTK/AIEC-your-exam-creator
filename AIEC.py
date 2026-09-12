@@ -333,9 +333,6 @@ if not has_active_exam:
             file2 = st.file_uploader("Past papers", label_visibility="hidden", key="file2_pastpapers", accept_multiple_files=True, max_upload_size=100000)
 
     if st.button("Generate Exam Paper", key="btn_generate_exam", use_container_width=True, type="primary"):
-        if not API_KEY:
-            st.error("API Key not found. Please add GEMINI_API_KEY to your .streamlit/secrets.toml file.")
-        else:
             client = genai.Client(api_key=API_KEY)
             all_files = []
 
