@@ -322,15 +322,15 @@ if not has_active_exam:
     with Col2:
         with st.container(border=True):
             st.write("Upload your course work (SoW, Notes, Images, etc)")
-            file1 = st.file_uploader("Course work", label_visibility="hidden", key="file1_coursework", accept_multiple_files=True, max_upload_size=200)
+            file1 = st.file_uploader("Course work", label_visibility="hidden", key="file1_coursework", accept_multiple_files=True, max_upload_size=100000)
     with Col3:
         with st.container(border=True):
             st.write("Upload your mark scheme for each past paper.")
-            file3 = st.file_uploader("Mark scheme", label_visibility="hidden", key="file3_markscheme", accept_multiple_files=True, max_upload_size=200)
+            file3 = st.file_uploader("Mark scheme", label_visibility="hidden", key="file3_markscheme", accept_multiple_files=True, max_upload_size=100000)
     with Col4:
         with st.container(border=True):
             st.write("Upload your past papers here for structure and layout.")
-            file2 = st.file_uploader("Past papers", label_visibility="hidden", key="file2_pastpapers", accept_multiple_files=True, max_upload_size=200)
+            file2 = st.file_uploader("Past papers", label_visibility="hidden", key="file2_pastpapers", accept_multiple_files=True, max_upload_size=100000)
 
     if st.button("Generate Exam Paper", key="btn_generate_exam", use_container_width=True, type="primary"):
         if not api_key:
