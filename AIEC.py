@@ -330,10 +330,7 @@ if not has_active_exam:
             st.write("Upload your past papers here for structure and layout.")
             file2 = st.file_uploader("Past papers", label_visibility="hidden", key="file2_pastpapers", accept_multiple_files=True, max_upload_size=100000)
 
-    if st.button("Generate Exam Paper", key="btn_generate_exam", use_container_width=True, type="primary"):
-        if not api_key:
-            st.error("Please enter your Gemini API Key in the sidebar.")
-        else:
+    if st.button("Generate Exam Paper", key="btn_generate_exam", use_container_width=True, type="primary")
             client = genai.Client(api_key=api_key)
             all_files = []
 
