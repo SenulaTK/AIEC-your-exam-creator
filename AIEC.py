@@ -1,32 +1,18 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import tempfile
 import os
 import uuid
 import json
+import math
 import datetime
+import time
 from pathlib import Path
 from google import genai
 from google.genai import types
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from fpdf import FPDF
-
-# ══════════════════════════════════════════════════════════════════════════════
-# PAGE CONFIG & SECRETS
-# ══════════════════════════════════════════════════════════════════════════════
-APP_DIR = Path(__file__).parent
-LOGO_PATH = APP_DIR / "logo.png"
-HAS_LOGO = LOGO_PATH.exists()
-
-st.set_page_config(
-    layout="wide", 
-    page_title="AIEC — AI Exam Creator", 
-    page_icon=str(LOGO_PATH) if HAS_LOGO else "📝"
-)
-
-# Safely retrieve the API key string from .streamlit/secrets.toml
-API_KEY = "AQ.Ab8RN6KHNsB3vM-GIpOwqqQn8IFkUO6KjzdH06DUojTIdi5ckg"
-
 
 # ══════════════════════════════════════════════════════════════════════════════
 # DATA MODELS
@@ -66,12 +52,83 @@ class GradedQuestion(BaseModel):
 class GradingResponse(BaseModel):
     graded_questions: List[GradedQuestion]
 
+# ══════════════════════════════════════════════════════════════════════════════
+# TIMER HELPER
+# ══════════════════════════════════════════════════════════════════════════════
+
+def get_current_theme_base() -> str:
+    """Best-effort detection of the user's active Streamlit theme ('light' or 'dark').
+
+    st.context.theme.base is only available on Streamlit >= 1.46, so this
+    falls back to 'light' on older versions instead of crashing the app.
+    """
+    try:
+        return st.context.theme.base or "light"
+    except Exception:
+        return "light"
+
+
+def render_countdown_timer(minutes: int):
+    if "exam_start_timestamp" not in st.session_state or st.session_state["exam_start_timestamp"] is None:
+        st.session_state["exam_start_timestamp"] = datetime.datetime.now().timestamp()
+
+    elapsed_seconds = datetime.datetime.now().timestamp() - st.session_state["exam_start_timestamp"]
+    total_seconds = minutes * 60
+    remaining_seconds = max(0, int(total_seconds - elapsed_seconds))
+
+    # This widget renders inside its own <iframe> (components.html), so it can't
+    # inherit the app's theme CSS variables — colors must be picked explicitly.
+    is_dark = get_current_theme_base() == "dark"
+    box_bg = "linear-gradient(135deg, #16304F 0%, #0D2036 100%)" if is_dark else "linear-gradient(135deg, #EEF1F6 0%, #FFFFFF 100%)"
+    box_text = "#F5F6F8" if is_dark else "#16304F"
+    box_border = "#D4A72C"
+    digits_color = "#F2C94C" if is_dark else "#A6790E"
+
+    timer_html = f"""
+    <div id="timer-box" style="
+        font-family: sans-serif;
+        font-size: 20px;
+        font-weight: 700;
+        color: {box_text};
+        background: {box_bg};
+        border: 2px solid {box_border};
+        border-radius: 10px;
+        padding: 12px 16px;
+        text-align: center;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 8px rgba(13,32,54,0.18);
+    ">
+        ⏱️ Time Remaining: <span id="timer-display" style="color:{digits_color};">--:--</span>
+    </div>
+    <script>
+        var secondsLeft = {remaining_seconds};
+        function updateTimer() {{
+            var mins = Math.floor(secondsLeft / 60);
+            var secs = secondsLeft % 60;
+            if (secs < 10) secs = "0" + secs;
+            if (mins < 10) mins = "0" + mins;
+            
+            document.getElementById('timer-display').innerHTML = mins + ":" + secs;
+            if (secondsLeft <= 0) {{
+                document.getElementById('timer-box').innerHTML = "⌛ TIME IS UP! Please submit your exam.";
+                document.getElementById('timer-box').style.backgroundColor = "#B3282D";
+                document.getElementById('timer-box').style.color = "#ffffff";
+                document.getElementById('timer-box').style.border = "2px solid #B3282D";
+            }} else {{
+                secondsLeft--;
+            }}
+        }}
+        updateTimer();
+        setInterval(updateTimer, 1000);
+    </script>
+    """
+    components.html(timer_html, height=75)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # HISTORY HELPERS
 # ══════════════════════════════════════════════════════════════════════════════
 
-HISTORY_FILE = APP_DIR / "aiec_exam_history.json"
+HISTORY_FILE = Path(__file__).parent / "aiec_exam_history.json"
 
 def load_history() -> list:
     if HISTORY_FILE.exists():
@@ -108,7 +165,6 @@ def delete_history_entry(entry_id: str):
     history = [h for h in load_history() if h.get("id") != entry_id]
     HISTORY_FILE.write_text(json.dumps(history, indent=2))
 
-
 # ══════════════════════════════════════════════════════════════════════════════
 # PDF HELPERS
 # ══════════════════════════════════════════════════════════════════════════════
@@ -118,7 +174,7 @@ def clean_pdf_text(text: str) -> str:
         return ""
     replacements = {
         '“': '"', '”': '"', '‘': "'", '’': "'",
-        '—': '-', '–': '-', '…': '...', '•': '*'
+        '—': '-', '–': '-', '…': '...', '•': '*', '–': '-'
     }
     for orig, repl in replacements.items():
         text = text.replace(orig, repl)
@@ -232,26 +288,62 @@ def build_pdf(exam_data: dict, include_answers: bool = False) -> bytes:
 
     return bytes(pdf.output())
 
+# ══════════════════════════════════════════════════════════════════════════════
+# PATHS (resolved relative to this script, not the current working directory,
+# so the app doesn't break depending on where `streamlit run` was launched from)
+# ══════════════════════════════════════════════════════════════════════════════
+
+APP_DIR = Path(__file__).parent
+LOGO_PATH = APP_DIR / "logo.png"
+HAS_LOGO = LOGO_PATH.exists()
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PAGE CONFIG
+# NOTE: this must be the very first Streamlit command in the script — calling
+# st.image (or anything else) before it is what previously threw off the
+# layout and produced the oversized, unstyled logo seen at the top of the page.
+# ══════════════════════════════════════════════════════════════════════════════
+st.set_page_config(
+    layout="wide",
+    page_title="AIEC — AI Exam Creator",
+    page_icon=str(LOGO_PATH) if HAS_LOGO else "📝",
+)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# THEME
+# The navy/gold look comes from .streamlit/config.toml (theme.light /
+# theme.dark / *.sidebar tables), NOT from injected CSS. That's what makes it
+# respect the user's light/dark preference correctly — hand-rolled CSS that
+# hardcodes navy text, for example, becomes unreadable once someone switches
+# to dark mode, which is what caused the contrast bugs in the previous pass.
+# Only the countdown timer below needs manual color handling, since it draws
+# into its own <iframe> and can't inherit the app's theme automatically.
+# ══════════════════════════════════════════════════════════════════════════════
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SIDEBAR CONFIGURATION
 # ══════════════════════════════════════════════════════════════════════════════
 
+
+
+api_key = "AQ.Ab8RN6KHNsB3vM-GIpOwqqQn8IFkUO6KjzdH06DUojTIdi5ckg"
+
+st.sidebar.markdown("---")
 st.sidebar.markdown("### 🎭 Mode")
-teacher_mode = st.sidebar.toggle("Teacher Mode", value=False, key="sidebar_teacher_mode", help="Shows full mark schemes, inline correct answers, and criteria.")
+teacher_mode = st.sidebar.toggle("Teacher Mode", value=False, help="Shows full mark schemes, inline correct answers, and criteria. Hides timer.")
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### ⚙️ Paper Settings")
 
-diff_auto = st.sidebar.checkbox("Auto Difficulty (AI Decides)", value=True, key="sidebar_diff_auto")
+diff_auto = st.sidebar.checkbox("Auto Difficulty (AI Decides)", value=True)
 if diff_auto:
     selected_difficulty = "Auto"
 else:
-    selected_difficulty = st.sidebar.selectbox("Difficulty Level", ["Easy", "Medium", "Hard"], key="sidebar_diff_select")
+    selected_difficulty = st.sidebar.selectbox("Difficulty Level", ["Easy", "Medium", "Hard"])
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 📋 Question Counts & Types")
-q_count_auto = st.sidebar.checkbox("Auto Question Mix (AI Decides)", value=True, key="sidebar_q_count_auto")
+q_count_auto = st.sidebar.checkbox("Auto Question Mix (AI Decides)", value=True)
 
 if q_count_auto:
     n_mcq = 0
@@ -261,12 +353,20 @@ if q_count_auto:
     n_true_false = 0
     n_other = 0
 else:
-    n_mcq = st.sidebar.slider("Multiple Choice (MCQ)", 0, 15, 3, key="sidebar_n_mcq")
-    n_short = st.sidebar.slider("Short Answer", 0, 10, 3, key="sidebar_n_short")
-    n_essay = st.sidebar.slider("Extended Essay", 0, 5, 1, key="sidebar_n_essay")
-    n_matching = st.sidebar.slider("Matching (Draw Line)", 0, 5, 1, key="sidebar_n_matching")
-    n_true_false = st.sidebar.slider("True / False", 0, 10, 2, key="sidebar_n_tf")
-    n_other = st.sidebar.slider("Other (Ordering/Calc/Labeling)", 0, 5, 1, key="sidebar_n_other")
+    n_mcq = st.sidebar.slider("Multiple Choice (MCQ)", 0, 15, 3)
+    n_short = st.sidebar.slider("Short Answer", 0, 10, 3)
+    n_essay = st.sidebar.slider("Extended Essay", 0, 5, 1)
+    n_matching = st.sidebar.slider("Matching (Draw Line)", 0, 5, 1)
+    n_true_false = st.sidebar.slider("True / False", 0, 10, 2)
+    n_other = st.sidebar.slider("Other (Ordering/Calc/Labeling)", 0, 5, 1)
+
+st.sidebar.markdown("---")
+st.sidebar.markdown("### ⏱️ Exam Timer")
+timer_auto = st.sidebar.checkbox("Auto Time Limit (AI Decides)", value=True)
+if timer_auto:
+    exam_time_limit_mins = 0
+else:
+    exam_time_limit_mins = st.sidebar.number_input("Time Limit (Minutes)", min_value=5, max_value=300, value=45, step=5)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SIDEBAR HISTORY
@@ -293,6 +393,7 @@ else:
                     st.session_state["exam_paper"] = h.get("exam")
                     st.session_state["grading_result"] = h.get("results")
                     st.session_state["active_exam_id"] = h_id
+                    st.session_state["exam_start_timestamp"] = datetime.datetime.now().timestamp()
                     st.rerun()
             with c_del:
                 if st.button("Delete", key=f"sb_del_{h_id}", use_container_width=True):
@@ -302,7 +403,6 @@ else:
                         st.session_state["grading_result"] = None
                     st.rerun()
 
-
 # ══════════════════════════════════════════════════════════════════════════════
 # MAIN INPUT FORM & CREATION UI
 # ══════════════════════════════════════════════════════════════════════════════
@@ -310,32 +410,33 @@ else:
 has_active_exam = "exam_paper" in st.session_state and st.session_state["exam_paper"] is not None
 
 if not has_active_exam: 
-    if HAS_LOGO:
-        st.image(str(LOGO_PATH), width=700)
+    st.image(str(LOGO_PATH), width=700)
     st.title("AIEC — AI Exam Creator")
     st.caption("Generate a full exam paper from your course material, then practice, grade, and export it.")
-    
     with st.container(border=True):
         st.write("Type your prompt / instructions here:")
-        input1 = st.text_area("Prompt Instructions", key="extra_info_prompt", height=100, label_visibility="hidden")
+        input1 = st.text_area("Prompt Instructions", key="extra_info", height=100, label_visibility="hidden")
 
     Col2, Col3, Col4 = st.columns(3)
 
     with Col2:
         with st.container(border=True):
             st.write("Upload your course work (SoW, Notes, Images, etc)")
-            file1 = st.file_uploader("Course work", label_visibility="hidden", key="file1_coursework", accept_multiple_files=True, max_upload_size=100000)
+            file1 = st.file_uploader("Course work", label_visibility="hidden", key="file1", accept_multiple_files=True, max_upload_size=200)
     with Col3:
         with st.container(border=True):
             st.write("Upload your mark scheme for each past paper.")
-            file3 = st.file_uploader("Mark scheme", label_visibility="hidden", key="file3_markscheme", accept_multiple_files=True, max_upload_size=100000)
+            file3 = st.file_uploader("Mark scheme", label_visibility="hidden", key="file3", accept_multiple_files=True, max_upload_size=200)
     with Col4:
         with st.container(border=True):
             st.write("Upload your past papers here for structure and layout.")
-            file2 = st.file_uploader("Past papers", label_visibility="hidden", key="file2_pastpapers", accept_multiple_files=True, max_upload_size=100000)
+            file2 = st.file_uploader("Past papers", label_visibility="hidden", key="file2", accept_multiple_files=True, max_upload_size=200)
 
-    if st.button("Generate Exam Paper", key="btn_generate_exam", use_container_width=True, type="primary"):
-            client = genai.Client(api_key=API_KEY)
+    if st.button("Generate Exam Paper", use_container_width=True, type="primary"):
+        if not api_key:
+            st.error("Please enter your Gemini API Key in the sidebar.")
+        else:
+            client = genai.Client(api_key=api_key)
             all_files = []
 
             def save_file(uploaded):
@@ -390,6 +491,11 @@ if not has_active_exam:
                         f"- Other (Ordering/Calc/Labeling): {n_other}\n"
                     )
 
+                if timer_auto:
+                    prompt += "Determine the recommended exam time limit in minutes based on total marks.\n"
+                else:
+                    prompt += f"Target time limit: {exam_time_limit_mins} minutes.\n"
+
                 if input1:
                     prompt += f"\nUser instructions: {input1}\n"
 
@@ -397,7 +503,7 @@ if not has_active_exam:
 
                 try:
                     response = client.models.generate_content(
-                        model='gemini-2.5-flash',
+                        model='gemini-3.6-flash',
                         contents=contents,
                         config=types.GenerateContentConfig(
                             response_mime_type="application/json",
@@ -408,6 +514,10 @@ if not has_active_exam:
                     st.session_state["exam_paper"] = exam
                     st.session_state["exam_answers"] = {}
                     st.session_state["grading_result"] = None
+                    st.session_state["time_limit_mins"] = (
+                        exam_time_limit_mins if not timer_auto else max(15, len(exam.get("questions", [])) * 4)
+                    )
+                    st.session_state["exam_start_timestamp"] = datetime.datetime.now().timestamp()
                     e_id = save_to_history(exam)
                     st.session_state["active_exam_id"] = e_id
                     st.success("Exam paper generated successfully!")
@@ -419,12 +529,12 @@ else:
     with c_hdr1:
         st.caption("Active Exam Mode")
     with c_hdr2:
-        if st.button("➕ Create New Exam", key="btn_create_new", use_container_width=True):
+        if st.button("➕ Create New Exam", use_container_width=True):
             st.session_state["exam_paper"] = None
             st.session_state["grading_result"] = None
             st.session_state["active_exam_id"] = None
+            st.session_state["exam_start_timestamp"] = None
             st.rerun()
-
 
 # ══════════════════════════════════════════════════════════════════════════════
 # EXAM PAPER DISPLAY & INTERACTIVE PRACTICE MODE
@@ -439,6 +549,12 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
     if exam.get("instructions"):
         st.info(f"**Instructions:** {exam['instructions']}")
 
+    t_limit = st.session_state.get("time_limit_mins", 45)
+    st.caption(f"⏱️ **Recommended Time Limit:** {t_limit} minutes")
+
+    if not teacher_mode:
+        render_countdown_timer(t_limit)
+
     col_dl1, col_dl2 = st.columns(2)
     with col_dl1:
         st.download_button(
@@ -446,7 +562,6 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
             data=build_pdf(exam, include_answers=False),
             file_name="exam_paper.pdf",
             mime="application/pdf",
-            key="dl_pdf_exam",
             use_container_width=True
         )
     with col_dl2:
@@ -455,7 +570,6 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
             data=build_pdf(exam, include_answers=True),
             file_name="exam_paper_with_answers.pdf",
             mime="application/pdf",
-            key="dl_pdf_answers",
             use_container_width=True
         )
 
@@ -605,10 +719,10 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
             with st.popover("⚙️ Question Actions"):
                 regen_inst = st.text_input("Instructions for regeneration:", key=f"regen_inst_{i}", placeholder="e.g. Make it harder")
                 if st.button("🔄 Regenerate This Question", key=f"btn_regen_{i}"):
-                    if not API_KEY:
-                        st.error("API Key not found in .streamlit/secrets.toml.")
+                    if not api_key:
+                        st.error("Gemini API key is required.")
                     else:
-                        client = genai.Client(api_key=API_KEY)
+                        client = genai.Client(api_key=api_key)
                         with st.spinner("Regenerating question..."):
                             regen_prompt = (
                                 f"Regenerate question Q{i+1} from this exam. "
@@ -618,7 +732,7 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
                             )
                             try:
                                 resp = client.models.generate_content(
-                                    model='gemini-2.5-flash',
+                                    model='gemini-3.6-flash',
                                     contents=regen_prompt,
                                     config=types.GenerateContentConfig(
                                         response_mime_type="application/json",
@@ -637,11 +751,11 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
     # ══════════════════════════════════════════════════════════════════════════════
 
     st.markdown("---")
-    if st.button("📊 Submit & Grade Exam Paper", key="btn_submit_grade", use_container_width=True, type="primary"):
-        if not API_KEY:
-            st.error("API Key not found. Please add GEMINI_API_KEY to your .streamlit/secrets.toml file.")
+    if st.button("📊 Submit & Grade Exam Paper", use_container_width=True, type="primary"):
+        if not api_key:
+            st.error("Please enter your Gemini API Key in the sidebar.")
         else:
-            client = genai.Client(api_key=API_KEY)
+            client = genai.Client(api_key=api_key)
             answers = st.session_state.get("exam_answers", {})
             
             grade_prompt = (
@@ -655,7 +769,7 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
             with st.spinner("Grading your submission with Gemini..."):
                 try:
                     g_resp = client.models.generate_content(
-                        model='gemini-2.5-flash',
+                        model='gemini-3.6-flash',
                         contents=grade_prompt,
                         config=types.GenerateContentConfig(
                             response_mime_type="application/json",
