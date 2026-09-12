@@ -1,9 +1,5 @@
 import streamlit as st
-
-# st.fragment was st.experimental_fragment before Streamlit 1.37 — fall back
-# gracefully instead of crashing on an older install.
-_fragment = getattr(st, "fragment", None) or getattr(st, "experimental_fragment")
-
+import streamlit.components.v1 as components
 import tempfile
 import os
 import uuid
@@ -60,48 +56,51 @@ class GradingResponse(BaseModel):
 # TIMER HELPER
 # ══════════════════════════════════════════════════════════════════════════════
 
-def _reset_exam_lock_state():
-    """Call whenever a fresh attempt starts (new exam, reloaded from history, etc.)."""
-    st.session_state["exam_time_up"] = False
-    st.session_state["auto_submit_attempted"] = False
-
-
-@_fragment(run_every=1)
 def render_countdown_timer(minutes: int):
-    """Server-side countdown. Reruns only itself once a second (not the whole
-    app), so answering questions elsewhere on the page never resets or
-    flickers this widget. Uses plain st.progress/st.error/etc. so it inherits
-    the app's light/dark theme automatically — no manual colors needed.
-    """
     if "exam_start_timestamp" not in st.session_state or st.session_state["exam_start_timestamp"] is None:
         st.session_state["exam_start_timestamp"] = datetime.datetime.now().timestamp()
 
     elapsed_seconds = datetime.datetime.now().timestamp() - st.session_state["exam_start_timestamp"]
-    total_seconds = max(1, minutes * 60)
+    total_seconds = minutes * 60
     remaining_seconds = max(0, int(total_seconds - elapsed_seconds))
-    pct_remaining = max(0.0, min(1.0, remaining_seconds / total_seconds))
 
-    mm, ss = divmod(remaining_seconds, 60)
-    time_str = f"{mm:02d}:{ss:02d}"
-
-    if remaining_seconds <= 0:
-        st.error("⌛ **Time's up!** Your answers have been locked and submitted for grading.")
-    elif pct_remaining <= 0.15:
-        st.error(f"⏱️ **{time_str} remaining** — almost out of time!")
-    elif pct_remaining <= 0.4:
-        st.warning(f"⏱️ **{time_str} remaining**")
-    else:
-        st.info(f"⏱️ **{time_str} remaining**")
-
-    st.progress(pct_remaining)
-
-    # This is the one moment we escalate to a *full app* rerun (plain
-    # st.rerun() from inside a fragment does that) so the rest of the page —
-    # locking inputs, kicking off auto-grading — can react to it. We only do
-    # this once, on the transition into the expired state, to avoid looping.
-    if remaining_seconds <= 0 and not st.session_state.get("exam_time_up"):
-        st.session_state["exam_time_up"] = True
-        st.rerun()
+    timer_html = f"""
+    <div id="timer-box" style="
+        font-family: sans-serif;
+        font-size: 20px;
+        font-weight: bold;
+        color: #d9534f;
+        background-color: #fdf2f2;
+        border: 2px solid #d9534f;
+        border-radius: 8px;
+        padding: 10px 15px;
+        text-align: center;
+        margin-bottom: 15px;
+    ">
+        ⏱️ Time Remaining: <span id="timer-display">--:--</span>
+    </div>
+    <script>
+        var secondsLeft = {remaining_seconds};
+        function updateTimer() {{
+            var mins = Math.floor(secondsLeft / 60);
+            var secs = secondsLeft % 60;
+            if (secs < 10) secs = "0" + secs;
+            if (mins < 10) mins = "0" + mins;
+            
+            document.getElementById('timer-display').innerHTML = mins + ":" + secs;
+            if (secondsLeft <= 0) {{
+                document.getElementById('timer-box').innerHTML = "⌛ TIME IS UP! Please submit your exam.";
+                document.getElementById('timer-box').style.backgroundColor = "#ff0000";
+                document.getElementById('timer-box').style.color = "#ffffff";
+            }} else {{
+                secondsLeft--;
+            }}
+        }}
+        updateTimer();
+        setInterval(updateTimer, 1000);
+    </script>
+    """
+    components.html(timer_html, height=75)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # HISTORY HELPERS
@@ -112,7 +111,7 @@ HISTORY_FILE = Path(__file__).parent / "aiec_exam_history.json"
 def load_history() -> list:
     if HISTORY_FILE.exists():
         try:
-            return json.loads(HISTORY_FILE.read_text(encoding="utf-8"))
+            return json.loads(HISTORY_FILE.read_text())
         except Exception:
             return []
     return []
@@ -143,33 +142,6 @@ def save_to_history(exam_data: dict, results: dict = None, entry_id: str = None)
 def delete_history_entry(entry_id: str):
     history = [h for h in load_history() if h.get("id") != entry_id]
     HISTORY_FILE.write_text(json.dumps(history, indent=2))
-
-# ══════════════════════════════════════════════════════════════════════════════
-# TEXT SANITIZING
-# Browsers/word processors love auto-substituting "smart" punctuation (em
-# dashes, curly quotes, ellipses) into free-typed text. That's normally
-# harmless, but it's the most common source of a stray UnicodeEncodeError
-# ('ascii' codec can't encode character ...) surfacing deep inside a
-# third-party HTTP/SDK call. We normalize any user-typed prompt text to
-# plain ASCII punctuation before it goes anywhere near the API.
-# ══════════════════════════════════════════════════════════════════════════════
-
-_SMART_PUNCT_MAP = {
-    '\u2014': '-', '\u2013': '-',            # em dash, en dash
-    '\u2018': "'", '\u2019': "'",            # curly single quotes
-    '\u201c': '"', '\u201d': '"',            # curly double quotes
-    '\u2026': '...',                          # ellipsis
-    '\u00a0': ' ',                            # non-breaking space
-}
-
-def sanitize_text(text: Optional[str]) -> str:
-    if not text:
-        return ""
-    for orig, repl in _SMART_PUNCT_MAP.items():
-        text = text.replace(orig, repl)
-    # Belt-and-braces: strip anything else outside the ASCII range rather
-    # than let it reach a codepath that assumes ASCII-only text.
-    return text.encode("ascii", "ignore").decode("ascii")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PDF HELPERS
@@ -295,42 +267,15 @@ def build_pdf(exam_data: dict, include_answers: bool = False) -> bytes:
     return bytes(pdf.output())
 
 # ══════════════════════════════════════════════════════════════════════════════
-# PATHS (resolved relative to this script, not the current working directory,
-# so the app doesn't break depending on where `streamlit run` was launched from)
-# ══════════════════════════════════════════════════════════════════════════════
-
-APP_DIR = Path(__file__).parent
-LOGO_PATH = APP_DIR / "logo.png"
-HAS_LOGO = LOGO_PATH.exists()
-
-# ══════════════════════════════════════════════════════════════════════════════
 # PAGE CONFIG
-# NOTE: this must be the very first Streamlit command in the script — calling
-# st.image (or anything else) before it is what previously threw off the
-# layout and produced the oversized, unstyled logo seen at the top of the page.
 # ══════════════════════════════════════════════════════════════════════════════
-st.set_page_config(
-    layout="wide",
-    page_title="AIEC — AI Exam Creator",
-    page_icon=str(LOGO_PATH) if HAS_LOGO else "📝",
-)
+st.image("logo.png", width=2500, use_container_width=False)
+st.set_page_config(layout="wide", page_title="AIEC, Your Exam Creator", page_icon="logo.png")
 
-# ══════════════════════════════════════════════════════════════════════════════
-# THEME
-# The navy/gold look comes from .streamlit/config.toml (theme.light /
-# theme.dark / *.sidebar tables), NOT from injected CSS. That's what makes it
-# respect the user's light/dark preference correctly — hand-rolled CSS that
-# hardcodes navy text, for example, becomes unreadable once someone switches
-# to dark mode, which is what caused the contrast bugs in the previous pass.
-# Only the countdown timer below needs manual color handling, since it draws
-# into its own <iframe> and can't inherit the app's theme automatically.
-# ══════════════════════════════════════════════════════════════════════════════
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SIDEBAR CONFIGURATION
 # ══════════════════════════════════════════════════════════════════════════════
-
-
 
 api_key = st.sidebar.text_input("Enter your Gemini API Key", type="password")
 
@@ -400,7 +345,6 @@ else:
                     st.session_state["grading_result"] = h.get("results")
                     st.session_state["active_exam_id"] = h_id
                     st.session_state["exam_start_timestamp"] = datetime.datetime.now().timestamp()
-                    _reset_exam_lock_state()
                     st.rerun()
             with c_del:
                 if st.button("Delete", key=f"sb_del_{h_id}", use_container_width=True):
@@ -416,10 +360,7 @@ else:
 
 has_active_exam = "exam_paper" in st.session_state and st.session_state["exam_paper"] is not None
 
-if not has_active_exam: 
-    st.image(str(LOGO_PATH), width=700)
-    st.title("AIEC — AI Exam Creator")
-    st.caption("Generate a full exam paper from your course material, then practice, grade, and export it.")
+if not has_active_exam:
     with st.container(border=True):
         st.write("Type your prompt / instructions here:")
         input1 = st.text_area("Prompt Instructions", key="extra_info", height=100, label_visibility="hidden")
@@ -429,15 +370,15 @@ if not has_active_exam:
     with Col2:
         with st.container(border=True):
             st.write("Upload your course work (SoW, Notes, Images, etc)")
-            file1 = st.file_uploader("Course work", label_visibility="hidden", key="file1", accept_multiple_files=True, max_upload_size=200)
+            file1 = st.file_uploader("Course work", label_visibility="hidden", key="file1", accept_multiple_files=True, max_upload_size=100000)
     with Col3:
         with st.container(border=True):
             st.write("Upload your mark scheme for each past paper.")
-            file3 = st.file_uploader("Mark scheme", label_visibility="hidden", key="file3", accept_multiple_files=True, max_upload_size=200)
+            file3 = st.file_uploader("Mark scheme", label_visibility="hidden", key="file3", accept_multiple_files=True, max_upload_size=100000)
     with Col4:
         with st.container(border=True):
             st.write("Upload your past papers here for structure and layout.")
-            file2 = st.file_uploader("Past papers", label_visibility="hidden", key="file2", accept_multiple_files=True, max_upload_size=200)
+            file2 = st.file_uploader("Past papers", label_visibility="hidden", key="file2", accept_multiple_files=True, max_upload_size=100000)
 
     if st.button("Generate Exam Paper", use_container_width=True, type="primary"):
         if not api_key:
@@ -504,7 +445,7 @@ if not has_active_exam:
                     prompt += f"Target time limit: {exam_time_limit_mins} minutes.\n"
 
                 if input1:
-                    prompt += f"\nUser instructions: {sanitize_text(input1)}\n"
+                    prompt += f"\nUser instructions: {input1}\n"
 
                 contents = all_files + [prompt]
 
@@ -525,18 +466,10 @@ if not has_active_exam:
                         exam_time_limit_mins if not timer_auto else max(15, len(exam.get("questions", [])) * 4)
                     )
                     st.session_state["exam_start_timestamp"] = datetime.datetime.now().timestamp()
-                    _reset_exam_lock_state()
                     e_id = save_to_history(exam)
                     st.session_state["active_exam_id"] = e_id
                     st.success("Exam paper generated successfully!")
                     st.rerun()
-                except UnicodeEncodeError:
-                    st.error(
-                        "Error generating exam paper: one of your uploaded files or typed instructions "
-                        "contains a special character (like a smart em dash '—' or curly quote) that the "
-                        "upload pipeline couldn't handle. Try removing unusual punctuation from the prompt "
-                        "box, or re-saving the file as plain text/UTF-8, then generate again."
-                    )
                 except Exception as e:
                     st.error(f"Error generating exam paper: {e}")
 else:
@@ -549,7 +482,6 @@ else:
             st.session_state["grading_result"] = None
             st.session_state["active_exam_id"] = None
             st.session_state["exam_start_timestamp"] = None
-            _reset_exam_lock_state()
             st.rerun()
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -570,9 +502,6 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
 
     if not teacher_mode:
         render_countdown_timer(t_limit)
-
-    # Teacher mode is untimed, so it's never locked regardless of the clock.
-    is_locked = (not teacher_mode) and st.session_state.get("exam_time_up", False)
 
     col_dl1, col_dl2 = st.columns(2)
     with col_dl1:
@@ -632,8 +561,7 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
                     f"Select Answer for Q{i+1}:",
                     opts,
                     key=f"ans_{i}",
-                    index=None,
-                    disabled=is_locked,
+                    index=None
                 )
 
             # 2. Matching
@@ -651,8 +579,7 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
                             f"Match for '{left_item}'",
                             rights,
                             key=f"match_{i}_{l_idx}",
-                            label_visibility="collapsed",
-                            disabled=is_locked,
+                            label_visibility="collapsed"
                         )
                         if sel != "-- Select Match --":
                             user_matches[left_item] = sel
@@ -665,10 +592,9 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
                     ["True", "False"],
                     key=f"ans_tf_{i}",
                     index=None,
-                    horizontal=True,
-                    disabled=is_locked,
+                    horizontal=True
                 )
-                tf_reason = st.text_input("Justification (optional/if false):", key=f"ans_tf_reason_{i}", disabled=is_locked)
+                tf_reason = st.text_input("Justification (optional/if false):", key=f"ans_tf_reason_{i}")
                 st.session_state["exam_answers"][i] = f"Choice: {tf_choice} | Reasoning: {tf_reason}"
 
             # 4. Ordering / Sequencing
@@ -686,8 +612,7 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
                             f"Position for item {it_idx}",
                             positions,
                             key=f"order_{i}_{it_idx}",
-                            label_visibility="collapsed",
-                            disabled=is_locked,
+                            label_visibility="collapsed"
                         )
                         user_order[item] = pos
                 st.session_state["exam_answers"][i] = json.dumps(user_order)
@@ -707,8 +632,7 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
                             f"Category for item {it_idx}",
                             cats,
                             key=f"cat_{i}_{it_idx}",
-                            label_visibility="collapsed",
-                            disabled=is_locked,
+                            label_visibility="collapsed"
                         )
                         user_cats[item] = cat_sel
                 st.session_state["exam_answers"][i] = json.dumps(user_cats)
@@ -719,28 +643,28 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
                 prompts = q["label_prompts"]
                 user_labels = {}
                 for l_idx, lbl in enumerate(prompts):
-                    val = st.text_input(f"Label for '{lbl}':", key=f"lbl_{i}_{l_idx}", disabled=is_locked)
+                    val = st.text_input(f"Label for '{lbl}':", key=f"lbl_{i}_{l_idx}")
                     user_labels[lbl] = val
                 st.session_state["exam_answers"][i] = json.dumps(user_labels)
 
             # 7. Calculation
             elif qtype == "calculation":
                 unit_str = f" ({q['expected_units']})" if q.get("expected_units") else ""
-                ans_val = st.text_input(f"Final Answer{unit_str}:", key=f"calc_ans_{i}", disabled=is_locked)
-                working = st.text_area("Working / Steps:", key=f"calc_work_{i}", height=80, disabled=is_locked)
+                ans_val = st.text_input(f"Final Answer{unit_str}:", key=f"calc_ans_{i}")
+                working = st.text_area("Working / Steps:", key=f"calc_work_{i}", height=80)
                 st.session_state["exam_answers"][i] = f"Answer: {ans_val} {unit_str} | Working: {working}"
 
             # 8. Extended Essay
             elif qtype == "essay":
-                ans_text = st.text_area("Write your essay response:", key=f"ans_essay_{i}", height=180, disabled=is_locked)
+                ans_text = st.text_area("Write your essay response:", key=f"ans_essay_{i}", height=180)
                 st.session_state["exam_answers"][i] = ans_text
 
             # 9. Short Answer / Default Written
             else:
-                ans_text = st.text_area("Type your answer:", key=f"ans_written_{i}", height=90, disabled=is_locked)
+                ans_text = st.text_area("Type your answer:", key=f"ans_written_{i}", height=90)
                 st.session_state["exam_answers"][i] = ans_text
 
-            with st.popover("⚙️ Question Actions", disabled=is_locked):
+            with st.popover("⚙️ Question Actions"):
                 regen_inst = st.text_input("Instructions for regeneration:", key=f"regen_inst_{i}", placeholder="e.g. Make it harder")
                 if st.button("🔄 Regenerate This Question", key=f"btn_regen_{i}"):
                     if not api_key:
@@ -751,7 +675,7 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
                             regen_prompt = (
                                 f"Regenerate question Q{i+1} from this exam. "
                                 f"Existing question: {json.dumps(q)}. "
-                                f"User instructions: {sanitize_text(regen_inst) if regen_inst else 'Provide a fresh alternative question on the same topic'}. "
+                                f"User instructions: {regen_inst if regen_inst else 'Provide a fresh alternative question on the same topic'}. "
                                 f"Return JSON matching Question schema."
                             )
                             try:
@@ -767,89 +691,46 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
                                 exam["questions"][i] = new_q
                                 st.session_state["exam_paper"] = exam
                                 st.rerun()
-                            except UnicodeEncodeError:
-                                st.error("Failed to regenerate: your instructions contain a special character (like an em dash or curly quote) that caused an encoding issue. Try plain punctuation and retry.")
                             except Exception as ex:
                                 st.error(f"Failed to regenerate: {ex}")
 
     # ══════════════════════════════════════════════════════════════════════════════
     # SUBMIT & GRADE EXAM
-    # (shared by the manual button below and the auto-submit-on-timeout path)
     # ══════════════════════════════════════════════════════════════════════════════
 
-    def run_grading(exam_to_grade: dict, key: str) -> bool:
-        """Grades the current answers with Gemini and saves the result. Returns True on success."""
-        client = genai.Client(api_key=key)
-        raw_answers = st.session_state.get("exam_answers", {})
-        answers = {k: (sanitize_text(v) if isinstance(v, str) else v) for k, v in raw_answers.items()}
-
-        grade_prompt = (
-            "You are an impartial academic examiner. Grade the student's exam submission against the original mark scheme and correct answers.\n\n"
-            f"Exam Title: {exam_to_grade.get('title')}\n"
-            f"Questions and Criteria:\n{json.dumps(exam_to_grade.get('questions'), indent=2)}\n\n"
-            f"Student Answers:\n{json.dumps(answers, indent=2)}\n\n"
-            "Return a GradedQuestion breakdown for every question with exact scores and constructive feedback."
-        )
-
-        try:
-            g_resp = client.models.generate_content(
-                model='gemini-3.6-flash',
-                contents=grade_prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    response_schema=GradingResponse,
-                ),
-            )
-            graded_data = json.loads(g_resp.text)
-            st.session_state["grading_result"] = graded_data
-            active_id = st.session_state.get("active_exam_id")
-            save_to_history(exam_to_grade, graded_data, entry_id=active_id)
-            return True
-        except UnicodeEncodeError:
-            st.error("Error grading exam paper: one of the answers contains a special character (like an em dash or curly quote) that caused an encoding issue. Please retry — this has been sanitized for next time.")
-            return False
-        except Exception as ex:
-            st.error(f"Error grading exam paper: {ex}")
-            return False
-
     st.markdown("---")
+    if st.button("📊 Submit & Grade Exam Paper", use_container_width=True, type="primary"):
+        if not api_key:
+            st.error("Please enter your Gemini API Key in the sidebar.")
+        else:
+            client = genai.Client(api_key=api_key)
+            answers = st.session_state.get("exam_answers", {})
+            
+            grade_prompt = (
+                "You are an impartial academic examiner. Grade the student's exam submission against the original mark scheme and correct answers.\n\n"
+                f"Exam Title: {exam.get('title')}\n"
+                f"Questions and Criteria:\n{json.dumps(exam.get('questions'), indent=2)}\n\n"
+                f"Student Answers:\n{json.dumps(answers, indent=2)}\n\n"
+                "Return a GradedQuestion breakdown for every question with exact scores and constructive feedback."
+            )
 
-    already_graded = bool(st.session_state.get("grading_result"))
-
-    if already_graded:
-        st.caption("✅ This exam has already been graded — see the results below.")
-
-    elif is_locked:
-        # The countdown hit zero: answers are locked (see disabled= above).
-        # Auto-submit exactly once; if there's no API key we can't grade
-        # automatically, so fall back to asking the user to add one and
-        # grade manually.
-        if not st.session_state.get("auto_submit_attempted"):
-            st.session_state["auto_submit_attempted"] = True
-            if api_key:
-                with st.spinner("Time's up — auto-submitting your exam for grading..."):
-                    if run_grading(exam, api_key):
-                        st.success("⏰ Time's up! Your exam was automatically submitted and graded.")
-                        st.rerun()
-            else:
-                st.warning("⏰ Time's up! Your answers are locked. Add your Gemini API key in the sidebar, then click below to grade.")
-        elif not api_key:
-            st.warning("⏰ Time's up! Your answers are locked. Add your Gemini API key in the sidebar, then click below to grade.")
-
-        if st.button("📊 Grade My Locked Answers", use_container_width=True, type="primary", disabled=not api_key):
             with st.spinner("Grading your submission with Gemini..."):
-                if run_grading(exam, api_key):
+                try:
+                    g_resp = client.models.generate_content(
+                        model='gemini-3.6-flash',
+                        contents=grade_prompt,
+                        config=types.GenerateContentConfig(
+                            response_mime_type="application/json",
+                            response_schema=GradingResponse,
+                        ),
+                    )
+                    graded_data = json.loads(g_resp.text)
+                    st.session_state["grading_result"] = graded_data
+                    active_id = st.session_state.get("active_exam_id")
+                    save_to_history(exam, graded_data, entry_id=active_id)
                     st.success("Exam successfully graded!")
-                    st.rerun()
-
-    else:
-        if st.button("📊 Submit & Grade Exam Paper", use_container_width=True, type="primary"):
-            if not api_key:
-                st.error("Please enter your Gemini API Key in the sidebar.")
-            else:
-                with st.spinner("Grading your submission with Gemini..."):
-                    if run_grading(exam, api_key):
-                        st.success("Exam successfully graded!")
+                except Exception as ex:
+                    st.error(f"Error grading exam paper: {ex}")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # RESULTS & PERFORMANCE BREAKDOWN
