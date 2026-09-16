@@ -1,0 +1,414 @@
+[
+  {
+    "id": "a472ee6c-89aa-4026-97a2-e0d6b0c168d5",
+    "timestamp": "2026-09-16 17:16",
+    "title": "Pearson Edexcel International GCSE Commerce - Commercial Operations and Associated Risks",
+    "exam": {
+      "title": "Pearson Edexcel International GCSE Commerce - Commercial Operations and Associated Risks",
+      "instructions": "Answer all questions. Show your working out clearly for calculation questions. Write structured and justified answers for evaluation and option questions. Total time allowed: 90 minutes.",
+      "questions": [
+        {
+          "question_text": "Which one of the following business activities is classified under the primary sector?",
+          "question_type": "mcq",
+          "topic": "Sectors of Industry",
+          "difficulty": "easy",
+          "marks": 1,
+          "options": [
+            "A Engineering",
+            "B Mining",
+            "C Construction",
+            "D Retailing"
+          ],
+          "left_items": null,
+          "right_items": null,
+          "items": null,
+          "categories": null,
+          "label_prompts": null,
+          "expected_units": null,
+          "correct_answer": "B Mining"
+        },
+        {
+          "question_text": "Which one of the following insurance principles requires the proposer to reveal all relevant material facts truthfully when completing a proposal form?",
+          "question_type": "mcq",
+          "topic": "Principles of Insurance",
+          "difficulty": "easy",
+          "marks": 1,
+          "options": [
+            "A Indemnity",
+            "B Subrogation",
+            "C Utmost good faith",
+            "D Insurable interest"
+          ],
+          "left_items": null,
+          "right_items": null,
+          "items": null,
+          "categories": null,
+          "label_prompts": null,
+          "expected_units": null,
+          "correct_answer": "C Utmost good faith"
+        },
+        {
+          "question_text": "Define the term trading bloc.",
+          "question_type": "short_answer",
+          "topic": "International Trade",
+          "difficulty": "easy",
+          "marks": 1,
+          "options": null,
+          "left_items": null,
+          "right_items": null,
+          "items": null,
+          "categories": null,
+          "label_prompts": null,
+          "expected_units": null,
+          "correct_answer": "A trade agreement between a group of countries for the removal or reduction of trade barriers between them."
+        },
+        {
+          "question_text": "Define the term proposal form.",
+          "question_type": "short_answer",
+          "topic": "Insurance Documentation",
+          "difficulty": "easy",
+          "marks": 1,
+          "options": null,
+          "left_items": null,
+          "right_items": null,
+          "items": null,
+          "categories": null,
+          "label_prompts": null,
+          "expected_units": null,
+          "correct_answer": "An application form completed by an individual or business requesting insurance cover and detailing the risk to be covered."
+        },
+        {
+          "question_text": "A shop in Malaysia sells a coffee for \u20228.00 euros. The exchange rate is \u20221.00 euro = 4.93 MYR. Calculate the price of the coffee in Malaysian Ringgit (MYR). Show your working.",
+          "question_type": "calculation",
+          "topic": "Foreign Exchange Calculations",
+          "difficulty": "medium",
+          "marks": 2,
+          "options": null,
+          "left_items": null,
+          "right_items": null,
+          "items": null,
+          "categories": null,
+          "label_prompts": null,
+          "expected_units": "MYR",
+          "correct_answer": "39.44 MYR (Working: 8.00 x 4.93 = 39.44 MYR)"
+        },
+        {
+          "question_text": "Calculate, to 2 decimal places, the monthly payment for a bicycle priced at 1 399.00 South African Rand (ZAR) if paid across 12 equal monthly installments. Show your working.",
+          "question_type": "calculation",
+          "topic": "Commercial Calculations",
+          "difficulty": "medium",
+          "marks": 2,
+          "options": null,
+          "left_items": null,
+          "right_items": null,
+          "items": null,
+          "categories": null,
+          "label_prompts": null,
+          "expected_units": "ZAR",
+          "correct_answer": "116.58 ZAR (Working: 1 399.00 / 12 = 116.58 ZAR)"
+        },
+        {
+          "question_text": "Explain one benefit to a retail business of purchasing stock directly from a wholesaler rather than directly from manufacturers.",
+          "question_type": "short_answer",
+          "topic": "Wholesale Trade",
+          "difficulty": "medium",
+          "marks": 3,
+          "options": null,
+          "left_items": null,
+          "right_items": null,
+          "items": null,
+          "categories": null,
+          "label_prompts": null,
+          "expected_units": null,
+          "correct_answer": "Wholesalers break bulk (1), which enables small retailers to purchase smaller quantities of goods as needed (1), reducing the amount of storage space and cash tied up in inventory (1)."
+        },
+        {
+          "question_text": "Explain one reason why an insurance policy will include specific clauses.",
+          "question_type": "short_answer",
+          "topic": "Insurance Policies",
+          "difficulty": "medium",
+          "marks": 3,
+          "options": null,
+          "left_items": null,
+          "right_items": null,
+          "items": null,
+          "categories": null,
+          "label_prompts": null,
+          "expected_units": null,
+          "correct_answer": "Clauses clarify the exact terms and limits of coverage to the customer (1), making it legal and explicit what conditions or events are excluded (1), thereby preventing fraudulent or invalid claims from being paid out (1)."
+        },
+        {
+          "question_text": "Categorize the following economic activities into their respective economic sectors.",
+          "question_type": "categorization",
+          "topic": "Sectors of Production",
+          "difficulty": "easy",
+          "marks": 4,
+          "options": null,
+          "left_items": null,
+          "right_items": null,
+          "items": [
+            "Farming",
+            "Car Production",
+            "Retailing",
+            "Iron Ore Mining"
+          ],
+          "categories": [
+            "Primary Sector",
+            "Secondary Sector",
+            "Tertiary Sector"
+          ],
+          "label_prompts": null,
+          "expected_units": null,
+          "correct_answer": "Primary Sector: Farming, Iron Ore Mining; Secondary Sector: Car Production; Tertiary Sector: Retailing"
+        },
+        {
+          "question_text": "Match the commercial trade term on the left with its correct definition on the right.",
+          "question_type": "matching",
+          "topic": "International Trade Terms",
+          "difficulty": "medium",
+          "marks": 4,
+          "options": null,
+          "left_items": [
+            "Tariff",
+            "Quota",
+            "Embargo",
+            "Subsidy"
+          ],
+          "right_items": [
+            "Financial support provided by a government to local producers",
+            "A tax imposed on imported goods",
+            "A physical limit on the quantity of goods that can be imported",
+            "A complete official prohibition on trade with a specific country"
+          ],
+          "items": null,
+          "categories": null,
+          "label_prompts": null,
+          "expected_units": null,
+          "correct_answer": "Tariff: A tax imposed on imported goods; Quota: A physical limit on the quantity of goods that can be imported; Embargo: A complete official prohibition on trade with a specific country; Subsidy: Financial support provided by a government to local producers"
+        },
+        {
+          "question_text": "Fill in the missing words regarding commercial insurance concepts: Under the principle of [blank], the insured is placed back into the exact financial position held immediately prior to the loss. If an insurer pays full compensation for destroyed goods, the principle of [blank] gives the insurer legal ownership of any salvageable scrap. Additionally, a proposer must hold an [blank] in the subject matter to legally take out cover.",
+          "question_type": "fill_blank",
+          "topic": "Principles of Insurance",
+          "difficulty": "medium",
+          "marks": 3,
+          "options": null,
+          "left_items": null,
+          "right_items": null,
+          "items": null,
+          "categories": null,
+          "label_prompts": null,
+          "expected_units": null,
+          "correct_answer": "indemnity, subrogation, insurable interest"
+        },
+        {
+          "question_text": "State whether the following statement is True or False: 'A hotel business can purchase standard commercial insurance cover against failing to make a profit due to normal economic competition.'",
+          "question_type": "true_false",
+          "topic": "Insurable and Uninsurable Risks",
+          "difficulty": "easy",
+          "marks": 1,
+          "options": null,
+          "left_items": null,
+          "right_items": null,
+          "items": null,
+          "categories": null,
+          "label_prompts": null,
+          "expected_units": null,
+          "correct_answer": "False (Normal market loss or failure to make a profit is an uninsurable risk because actuaries cannot calculate the mathematical probability of non-profitability)."
+        },
+        {
+          "question_text": "Place the standard commercial documents in chronological order of use during a trade transaction.",
+          "question_type": "ordering",
+          "topic": "Trade Documents",
+          "difficulty": "medium",
+          "marks": 4,
+          "options": null,
+          "left_items": null,
+          "right_items": null,
+          "items": [
+            "Invoice",
+            "Quotation",
+            "Delivery Note",
+            "Purchase Order"
+          ],
+          "categories": null,
+          "label_prompts": null,
+          "expected_units": null,
+          "correct_answer": "1. Quotation, 2. Purchase Order, 3. Delivery Note, 4. Invoice"
+        },
+        {
+          "question_text": "Identify the key purchasing documents described in each transaction stage below.",
+          "question_type": "labeling",
+          "topic": "Commercial Documentation",
+          "difficulty": "easy",
+          "marks": 3,
+          "options": null,
+          "left_items": null,
+          "right_items": null,
+          "items": null,
+          "categories": null,
+          "label_prompts": [
+            "Document A: Issued by seller providing price estimate prior to ordering",
+            "Document B: Signed by buyer upon receipt of delivered goods",
+            "Document C: Issued by seller requesting payment for goods supplied"
+          ],
+          "expected_units": null,
+          "correct_answer": "Document A: Quotation; Document B: Delivery Note; Document C: Invoice"
+        },
+        {
+          "question_text": "Analyse the benefits for a retail clothing chain like Truworths of holding Public Liability Insurance.",
+          "question_type": "essay",
+          "topic": "Insurance Types",
+          "difficulty": "medium",
+          "marks": 6,
+          "options": null,
+          "left_items": null,
+          "right_items": null,
+          "items": null,
+          "categories": null,
+          "label_prompts": null,
+          "expected_units": null,
+          "correct_answer": "AO2: Public liability insurance protects Truworths against legal claims if a member of the public or tradesperson (such as an electrician) trips, falls, or is injured on store premises. AO3: By holding this cover, Truworths avoids potentially catastrophic financial losses from court compensation payouts or legal fees, ensuring business stability and encouraging third-party contractors to work on site securely."
+        },
+        {
+          "question_text": "Amazon is considering two options for locating an additional logistics warehouse in India:\nOption 1: Locating near to major transport links (rail and highways).\nOption 2: Locating at a large site with space to expand later.\nJustify which one of these two options Amazon should choose.",
+          "question_type": "essay",
+          "topic": "Warehouse Location Decisions",
+          "difficulty": "hard",
+          "marks": 9,
+          "options": null,
+          "left_items": null,
+          "right_items": null,
+          "items": null,
+          "categories": null,
+          "label_prompts": null,
+          "expected_units": null,
+          "correct_answer": "Option 1 Arguments:\nAO2: Locating near major transport links allows rapid dispatch of goods to urban areas and enables employees to commute easily by public transport.\nAO3: Faster delivery improves customer satisfaction and repeat sales. However (AO4), road traffic congestion or higher land costs near transport hubs could raise operating expenses.\nOption 2 Arguments:\nAO2: A large site allows Amazon to store a vastly wider product range and accommodate future order volume growth.\nAO3: Consolidating inventory in one expanding site saves the expense of opening multiple smaller hubs. However (AO4), if land is located far from city centers, long-distance delivery times will increase.\nConclusion: Option 1 is preferable for e-commerce where rapid delivery speed is the prime competitive advantage."
+        },
+        {
+          "question_text": "Evaluate why a small independent pet shop like The Pet Safari can survive and remain profitable when competing directly against large pet supermarket chains. You should use your knowledge of commerce in your answer.",
+          "question_type": "essay",
+          "topic": "Retail Competition and Small Retailers",
+          "difficulty": "hard",
+          "marks": 12,
+          "options": null,
+          "left_items": null,
+          "right_items": null,
+          "items": null,
+          "categories": null,
+          "label_prompts": null,
+          "expected_units": null,
+          "correct_answer": "AO1: Small retailers survive by providing personalized customer service, specialized knowledge, and flexible purchase options.\nAO2: The Pet Safari offers tailored nutrition advice for dogs/cats and sells fresh, custom-quantities of pet food, whereas large pet chains offer mostly standardized, pre-packaged goods.\nAO3: Specialized customer service creates personal relationships and customer loyalty, encouraging word-of-mouth recommendations and repeat visits.\nAO4: On the other hand, large pet stores benefit from purchasing economies of scale, allowing them to undercut prices and offer a broader range of general merchandise. Furthermore, small shops face higher overhead costs per unit.\nConclusion/Judgement: Despite price disadvantages, small independent retailers like The Pet Safari survive successfully by differentiating themselves through niche custom products and expert high-touch service that large automated competitors cannot replicate."
+        }
+      ]
+    },
+    "results": {
+      "graded_questions": [
+        {
+          "question_index": 0,
+          "score": 1,
+          "feedback": "Correct! Selected option matches the mark scheme.",
+          "graded_by": "deterministic"
+        },
+        {
+          "question_index": 1,
+          "score": 1,
+          "feedback": "Correct! Selected option matches the mark scheme.",
+          "graded_by": "deterministic"
+        },
+        {
+          "question_index": 2,
+          "score": 1,
+          "feedback": "Accurate definition provided.",
+          "graded_by": "gemini"
+        },
+        {
+          "question_index": 3,
+          "score": 1,
+          "feedback": "Accurate definition provided.",
+          "graded_by": "gemini"
+        },
+        {
+          "question_index": 4,
+          "score": 2,
+          "feedback": "Correct calculation! Final answer 39.44 matches expected value 39.44.",
+          "graded_by": "deterministic"
+        },
+        {
+          "question_index": 5,
+          "score": 2,
+          "feedback": "Correct calculation! Final answer 116.58 matches expected value 116.58.",
+          "graded_by": "deterministic"
+        },
+        {
+          "question_index": 6,
+          "score": 3,
+          "feedback": "Full marks awarded for correctly identifying that wholesalers break bulk, allowing small purchases, and reducing storage space and tied-up cash.",
+          "graded_by": "gemini"
+        },
+        {
+          "question_index": 7,
+          "score": 3,
+          "feedback": "Full marks awarded for explaining clarity of terms, explicit exclusions, and prevention of fraudulent/invalid claims.",
+          "graded_by": "gemini"
+        },
+        {
+          "question_index": 8,
+          "score": 4,
+          "feedback": "All four economic activities categorized correctly.",
+          "graded_by": "gemini"
+        },
+        {
+          "question_index": 9,
+          "score": 0,
+          "feedback": "Incomplete or missing matching submission. Correct pairs: Tariff: A tax imposed on imported goods; Quota: A physical limit on the quantity of goods that can be imported; Embargo: A complete official prohibition on trade with a specific country; Subsidy: Financial support provided by a government to local producers",
+          "graded_by": "deterministic"
+        },
+        {
+          "question_index": 10,
+          "score": 3,
+          "feedback": "All three commercial insurance concepts correctly identified (indemnity, subrogation, insurable interest), despite a minor typo in 'indemnity'.",
+          "graded_by": "gemini"
+        },
+        {
+          "question_index": 11,
+          "score": 0,
+          "feedback": "Incorrect. Expected False. Reference: False (Normal market loss or failure to make a profit is an uninsurable risk because actuaries cannot calculate the mathematical probability of non-profitability).",
+          "graded_by": "deterministic"
+        },
+        {
+          "question_index": 12,
+          "score": 0,
+          "feedback": "No valid ordering provided. Correct order: 1. Quotation, 2. Purchase Order, 3. Delivery Note, 4. Invoice",
+          "graded_by": "deterministic"
+        },
+        {
+          "question_index": 13,
+          "score": 3,
+          "feedback": "All purchasing documents correctly matched to their descriptions.",
+          "graded_by": "gemini"
+        },
+        {
+          "question_index": 14,
+          "score": 6,
+          "feedback": "Comprehensive response addressing both AO2 application and AO3 analytical points regarding public liability insurance for Truworths.",
+          "graded_by": "gemini"
+        },
+        {
+          "question_index": 15,
+          "score": 9,
+          "feedback": "Excellent response providing thorough justification with detailed analysis and evaluation across both options, concluding with a sound judgement.",
+          "graded_by": "gemini"
+        },
+        {
+          "question_index": 16,
+          "score": 12,
+          "feedback": "Comprehensive and well-structured answer addressing all required Assessment Objectives (AO1, AO2, AO3, AO4) and providing a balanced judgment.",
+          "graded_by": "gemini"
+        }
+      ],
+      "total_score": 51,
+      "total_possible": 60
+    }
+  }
+]
