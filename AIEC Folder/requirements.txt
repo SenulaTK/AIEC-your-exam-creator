@@ -1,9 +1,0 @@
-streamlit
-google-genai
-pydantic
-fpdf2
-pandas
-plotly
-watchdog
-google-cloud-secret-manager>=2.18.0
-psycopg2-binary>=2.9.9
