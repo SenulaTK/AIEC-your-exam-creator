@@ -5,6 +5,7 @@ Instructions:
 -You can access the app on the web by going to aiectk.streamlit.app 
 -Or you can download the entire application by selecting code and downloading the zip.  
 <img width="494" height="392" alt="Screenshot 2026-09-19 at 20 56 39" src="https://github.com/user-attachments/assets/78b3d6f0-c993-467b-8e1c-780d1070ac50" />
+
 -Make sure all the dependencies(shown in the requirements.txt file) are installed 
 -Once done type in the terminal streamlit run AIEC.py 
 
