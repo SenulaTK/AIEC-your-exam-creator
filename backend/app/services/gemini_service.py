@@ -26,14 +26,16 @@ class GeminiService:
 
     @staticmethod
     def _clean_json_text(raw_text: str) -> str:
-        """Strip markdown code block fences and whitespace from Gemini response text."""
+        """Extract JSON from Gemini response text, handling conversational filler and markdown."""
         if not raw_text:
             return "{}"
         clean_text = raw_text.strip()
-        if "```" in clean_text:
-            clean_text = re.sub(r"^```(?:json)?\s*", "", clean_text, flags=re.IGNORECASE)
-            clean_text = re.sub(r"\s*```$", "", clean_text)
-            clean_text = clean_text.strip()
+        
+        # Extract content inside markdown code blocks if present anywhere in the text
+        match = re.search(r"```(?:json)?(.*?)```", clean_text, re.DOTALL | re.IGNORECASE)
+        if match:
+            clean_text = match.group(1).strip()
+            
         return clean_text
 
     def _call_with_fallback(
@@ -59,19 +61,10 @@ class GeminiService:
                     config=config,
                 )
             except Exception as e:
-                err_str = str(e)
-                # Retry on rate limits or transient server errors.
-                if any(
-                    key in err_str.lower()
-                    for key in ["503", "unavailable", "capacity", "429", "resource_exhausted"]
-                ):
-                    last_exception = e
-                    continue
-                # If a 404 model error occurs, continue to the next valid fallback.
-                if "404" in err_str or "NOT_FOUND" in err_str:
-                    last_exception = e
-                    continue
-                raise
+                # Catch all standard API exceptions (Rate limits, 500s, 404s, Schema formatting issues)
+                # and continue to the next fallback model.
+                last_exception = e
+                continue
 
         raise last_exception if last_exception else RuntimeError(
             "Failed to generate content with available Gemini models."
@@ -110,6 +103,72 @@ class GeminiService:
             "   - CORRECT: 'Calculate the value of $y$ when $x = 4$.'\n"
             "   - INCORRECT: '$Calculate the value of y when x = 4.$'\n"
         )
+
+        config = types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=ExamPaper,
+            temperature=0.7,
+        )
+        target_model = req.model_name or settings.DEFAULT_MODEL
+        response = self._call_with_fallback(target_model, prompt, config)
+        cleaned_json = self._clean_json_text(response.text)
+        return ExamPaper.model_validate_json(cleaned_json)
+
+    def regenerate_question(self, req: RegenerateQuestionRequest) -> Question:
+        prompt = (
+            f"You are an expert examiner editing an existing exam paper titled '{req.exam_title}'.\n\n"
+            f"Original Question:\n{req.original_question.model_dump_json(indent=2)}\n\n"
+            f"Teacher's Refinement Instructions:\n{req.edit_instructions}\n\n"
+            "Rewrite and regenerate this single question following all quality guidelines:\n"
+            "1. MATHEMATICAL FORMATTING: Wrap math formulas and variables in LaTeX dollar signs ($...$) across all JSON fields.\n"
+            "2. WORD SPACING: Keep plain English text outside LaTeX math dollars.\n"
+        )
+
+        config = types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=Question,
+            temperature=0.6,
+        )
+        target_model = req.model_name or settings.DEFAULT_MODEL
+        response = self._call_with_fallback(target_model, prompt, config)
+        cleaned_json = self._clean_json_text(response.text)
+        return Question.model_validate_json(cleaned_json)
+
+    def grade_subjective_batch(
+        self,
+        exam_title: str,
+        subjective_questions: List[Dict[str, Any]],
+        model_name: Optional[str] = None,
+    ) -> List[GradedQuestion]:
+        """Send only subjective questions to Gemini for rubric-based grading."""
+        if not subjective_questions:
+            return []
+
+        prompt = (
+            "You are an impartial academic examiner. Grade the following subjective exam questions "
+            "strictly against the provided marking criteria and correct answers.\n\n"
+            "Formatting Rules:\n"
+            "- Use LaTeX math delimiters ($...$) strictly for mathematical feedback or formulas.\n"
+            "- Ensure clean, natural word spacing in all feedback text. Never wrap standard sentences in `$`.\n\n"
+            f"Exam Title: {exam_title}\n\n"
+            f"Questions, Criteria, and Student Responses:\n"
+            f"{json.dumps(subjective_questions, indent=2)}\n\n"
+            "Return a GradedQuestion object for every question index provided, with fair mark allocation and constructive feedback."
+        )
+
+        config = types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=GradingResponse,
+            temperature=0.2,
+        )
+        target_model = model_name or settings.DEFAULT_MODEL
+        response = self._call_with_fallback(target_model, prompt, config)
+        cleaned_json = self._clean_json_text(response.text)
+        parsed = GradingResponse.model_validate_json(cleaned_json)
+        for graded_question in parsed.graded_questions:
+            graded_question.graded_by = "gemini"
+        return parsed.graded_questions
+
 
         config = types.GenerateContentConfig(
             response_mime_type="application/json",
