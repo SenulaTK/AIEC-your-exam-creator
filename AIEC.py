@@ -483,12 +483,6 @@ def compute_badges(graded_qs: list, questions: list, pct: float,
                 break
         else:
             streak = 0
-
-    if time_limit_secs > 0 and time_taken_secs > 0:
-        time_saved = time_limit_secs - time_taken_secs
-        if time_saved >= 1200:
-            badges.append(("⚡", "Speed Demon", f"Finished {time_saved // 60} minutes before time limit!"))
-
     answered = sum(1 for i in range(len(questions)) if next(
         (g for g in graded_qs if g.get("question_index") == i), {}).get("score", -1) >= 0)
     if answered == len(questions):
