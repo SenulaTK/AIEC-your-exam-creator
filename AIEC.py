@@ -1424,10 +1424,6 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
                     <div>{q.get('correct_answer','')}</div></div>""", unsafe_allow_html=True)
 
             st.markdown(f"**💬 Feedback:** {g_info.get('feedback', 'No detailed feedback available.')}")
-            if is_det:
-                st.caption("⚡ Graded by Deterministic Engine — 0ms latency, $0 token cost, 100% precision")
-            else:
-                st.caption(f"🤖 Evaluated by {selected_model} (AI rubric-based reasoning)")
 
     st.markdown("---")
 
