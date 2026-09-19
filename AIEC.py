@@ -601,7 +601,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 backend_online = is_backend_available()
-status_badge_html = """<span style="background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); font-weight: 700; padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase;">🟢 Cloud Run API Online</span>""" if backend_online else """<span style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); font-weight: 700; padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase;">⚡ Embedded Hybrid Engine</span>"""
+status_badge_html = """<span style="background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); font-weight: 700; padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase;">🟢 Cloud Run API Online</span>""" if backend_online else """<span style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); font-weight: 700; padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase;">⚡ Powered by Google Geminie</span>"""
 
 st.markdown(f"""
 <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 24px 30px; margin-bottom: 20px; box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25); backdrop-filter: blur(16px);">
