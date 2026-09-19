@@ -1213,7 +1213,6 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
 <div>
 <div style="color:rgba(255,255,255,0.75);font-size:0.85rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Exam Results Report</div>
 <h2 style="color:#fff;margin:6px 0 2px 0;font-size:1.55rem;font-weight:800;">{exam_title}</h2>
-<div style="color:rgba(255,255,255,0.8);font-size:0.95rem;margin-bottom:14px;">{cand_name_display} {cand_index_display} &nbsp;·&nbsp; {date_display}</div>
 <span style="background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.5);border-radius:50px;padding:8px 22px;color:#fff;font-size:1.05rem;font-weight:700;letter-spacing:0.5px;">{grade_str}</span>
 <span style="margin-left:12px;background:{pass_color};color:{pass_text_color};border-radius:50px;padding:8px 22px;font-size:1rem;font-weight:800;letter-spacing:1px;">{pass_badge_icon} {pass_label}</span>
 </div>
