@@ -1117,12 +1117,6 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
 
     st.markdown("---")
     
-    st.subheader("📝 Candidate Information")
-    c_inf1, c_inf2 = st.columns(2)
-    with c_inf1:
-        st.text_input("Candidate Name", key="cand_name_input", placeholder="Enter your full name")
-    with c_inf2:
-        st.text_input("Index Number", key="cand_index_input", placeholder="Enter your student ID or index")
         
     if st.button("📊 Submit & Grade Exam Paper", use_container_width=True, type="primary"):
         if not api_key:
