@@ -46,7 +46,7 @@ class GeminiService:
     ):
         # Always prioritize requested model, followed by valid production fallbacks.
         model_chain = [requested_model]
-        valid_fallbacks = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+        valid_fallbacks = ["gemini-3.8-flash", "gemini-3.7-flash"], "gemini-3.6-flash", "gemini-3.5-flash"]
 
         for fallback in valid_fallbacks:
             if fallback not in model_chain:
