@@ -67,43 +67,7 @@ def render_countdown_timer(minutes: int):
     total_seconds = minutes * 60
     remaining_seconds = max(0, int(total_seconds - elapsed_seconds))
 
-    timer_html = f"""
-    <div id="timer-box" style="
-        font-family: sans-serif;
-        font-size: 20px;
-        font-weight: bold;
-        color: #d9534f;
-        background-color: #fdf2f2;
-        border: 2px solid #d9534f;
-        border-radius: 8px;
-        padding: 10px 15px;
-        text-align: center;
-        margin-bottom: 15px;
-    ">
-        ⏱️ Time Remaining: <span id="timer-display">--:--</span>
-    </div>
-    <script>
-        var secondsLeft = {remaining_seconds};
-        function updateTimer() {{
-            var mins = Math.floor(secondsLeft / 60);
-            var secs = secondsLeft % 60;
-            if (secs < 10) secs = "0" + secs;
-            if (mins < 10) mins = "0" + mins;
-            
-            document.getElementById('timer-display').innerHTML = mins + ":" + secs;
-            if (secondsLeft <= 0) {{
-                document.getElementById('timer-box').innerHTML = "⌛ TIME IS UP! Please submit your exam.";
-                document.getElementById('timer-box').style.backgroundColor = "#ff0000";
-                document.getElementById('timer-box').style.color = "#ffffff";
-            }} else {{
-                secondsLeft--;
-            }}
-        }}
-        updateTimer();
-        setInterval(updateTimer, 1000);
-    </script>
-    """
-    components.html(timer_html, height=75)
+    
 
 
 # ══════════════════════════════════════════════════════════════════════════════
