@@ -1218,7 +1218,6 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
 </div>
 </div>
 <div style="color:rgba(255,255,255,0.85);font-size:0.95rem;margin-top:10px;font-weight:600;">{total_awarded} / {total_possible} marks</div>
-<div style="color:rgba(255,255,255,0.65);font-size:0.8rem;margin-top:4px;">⏱️ {time_taken_mins}m {time_taken_sec_rem:02d}s taken</div>
 </div>
 </div>
 </div>"""
