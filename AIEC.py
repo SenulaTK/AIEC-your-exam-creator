@@ -1829,8 +1829,13 @@ def build_pdf(exam_data: dict, include_answers: bool = False, candidate_name: st
             for _ in range(4):
                 pdf.cell(0, 7, "", border="B", new_x="LMARGIN", new_y="NEXT")
             unit_str = f" ({q['expected_units']})" if q.get("expected_units") else ""
-            pdf.multi_cell(0, 6, f"Final Answer{unit_str}: _______________________, new_x=\"LMARGIN\", new_y=\"NEXT\")
-
+            pdf.multi_cell(
+            0,
+            6,
+            f"Final Answer{unit_str}: _______________________",
+            new_x="LMARGIN",
+            new_y="NEXT",
+            )
         elif qtype == "essay":
             for _ in range(6):
                 pdf.cell(0, 8, "", border="B", new_x="LMARGIN", new_y="NEXT")
