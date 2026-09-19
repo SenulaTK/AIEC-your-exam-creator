@@ -58,51 +58,7 @@ def render_standard_math(text: str, prefix: str = ""):
     else:
         st.markdown(f"{prefix}{clean_text}")
 
-def render_countdown_timer(minutes: int):
-    if "exam_start_timestamp" not in st.session_state or st.session_state["exam_start_timestamp"] is None:
-        st.session_state["exam_start_timestamp"] = datetime.datetime.now().timestamp()
 
-    elapsed_seconds = datetime.datetime.now().timestamp() - st.session_state["exam_start_timestamp"]
-    total_seconds = minutes * 60
-    remaining_seconds = max(0, int(total_seconds - elapsed_seconds))
-
-    timer_html = f"""
-    <div id="timer-box" style="
-        font-family: sans-serif;
-        font-size: 20px;
-        font-weight: bold;
-        color: #d9534f;
-        background-color: #fdf2f2;
-        border: 2px solid #d9534f;
-        border-radius: 8px;
-        padding: 10px 15px;
-        text-align: center;
-        margin-bottom: 15px;
-    ">
-        ⏱️ Time Remaining: <span id="timer-display">--:--</span>
-    </div>
-    <script>
-        var secondsLeft = {remaining_seconds};
-        function updateTimer() {{
-            var mins = Math.floor(secondsLeft / 60);
-            var secs = secondsLeft % 60;
-            if (secs < 10) secs = "0" + secs;
-            if (mins < 10) mins = "0" + mins;
-            
-            document.getElementById('timer-display').innerHTML = mins + ":" + secs;
-            if (secondsLeft <= 0) {{
-                document.getElementById('timer-box').innerHTML = "⌛ TIME IS UP! Please submit your exam.";
-                document.getElementById('timer-box').style.backgroundColor = "#ff0000";
-                document.getElementById('timer-box').style.color = "#ffffff";
-            }} else {{
-                secondsLeft--;
-            }}
-        }}
-        updateTimer();
-        setInterval(updateTimer, 1000);
-    </script>
-    """
-    components.html(timer_html, height=75)
 
 
 # ════════════════════════════════════════════════════════════════
@@ -464,47 +420,6 @@ def build_marked_script_pdf(exam_data: dict, grading_result: dict, student_answe
 # ACHIEVEMENT BADGES HELPER
 # ════════════════════════════════════════════════════════════════
 
-def compute_badges(graded_qs: list, questions: list, pct: float,
-                    flagged: set, time_taken_secs: int, time_limit_secs: int,
-                    previous_pct: float | None) -> list:
-    badges = []
-
-    if pct >= 100:
-        badges.append(("🎯", "Perfect Score", "You answered every question correctly!"))
-
-    streak = 0
-    for i, q in enumerate(questions):
-        g = next((g for g in graded_qs if g.get("question_index") == i), {})
-        if g.get("score", 0) >= q.get("marks", 1):
-            streak += 1
-            if streak >= 3:
-                badges.append(("🔥", "Hot Streak", "3 or more correct answers in a row!"))
-                break
-        else:
-            streak = 0
-    answered = sum(1 for i in range(len(questions)) if next(
-        (g for g in graded_qs if g.get("question_index") == i), {}).get("score", -1) >= 0)
-    if answered == len(questions):
-        badges.append(("🦁", "Never Give Up", "You answered every single question!"))
-
-    if len(flagged) >= 2:
-        badges.append(("🚩", "Flag Master", f"Flagged {len(flagged)} questions and came back to review them."))
-
-    for i, q in enumerate(questions):
-        if q.get("question_type") == "essay":
-            g = next((g for g in graded_qs if g.get("question_index") == i), {})
-            q_max = q.get("marks", 1)
-            if q_max > 0 and (g.get("score", 0) / q_max) >= 0.8:
-                badges.append(("🧠", "Deep Thinker", "Your extended essay scored 80%+!"))
-                break
-
-    if previous_pct is not None and pct > previous_pct:
-        badges.append(("🌟", "Improved!", f"You improved by {round(pct - previous_pct, 1)}% from your last attempt!"))
-
-    if previous_pct is None:
-        badges.append(("🏅", "First Attempt", "This is your first time taking this exam."))
-
-    return badges
 
 
 # ════════════════════════════════════════════════════════════════
@@ -1268,29 +1183,6 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
 
     st.markdown("---")
 
-    badges = compute_badges(
-        graded_qs, questions, pct, flagged_qs,
-    )
-    if badges:
-        st.subheader("🏅 Achievement Badges")
-        badge_cols = st.columns(min(len(badges), 4))
-        for idx, (icon, name, desc) in enumerate(badges):
-            with badge_cols[idx % 4]:
-                st.markdown(f"""
-                <div style="
-                    background: linear-gradient(135deg,rgba(99,102,241,0.12),rgba(168,85,247,0.08));
-                    border: 1.5px solid rgba(99,102,241,0.3);
-                    border-radius: 12px;
-                    padding: 14px 12px;
-                    text-align: center;
-                    margin-bottom: 10px;
-                ">
-                    <div style="font-size:2rem;">{icon}</div>
-                    <div style="font-weight:700; font-size:0.85rem; margin-top:4px;">{name}</div>
-                    <div style="font-size:0.72rem; color:#94a3b8; margin-top:3px;">{desc}</div>
-                </div>
-                """, unsafe_allow_html=True)
-        st.markdown("---")
 
     if prev_entry:
         st.subheader("📊 Comparison with Previous Attempt")
