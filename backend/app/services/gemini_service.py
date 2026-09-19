@@ -89,23 +89,27 @@ class GeminiService:
             f"- Allowed Question Types: {', '.join(req.question_types)}\n\n"
         )
         if req.syllabus_context:
-             prompt += (
-        "--- CURRICULUM SYLLABUS / SOURCE MATERIAL ---\n"
-        f"{req.syllabus_context}\n"
-        "----------------------------------------------\n"
-        "Align questions directly to learning objectives and concepts in the source material.\n\n"
-        )
+            prompt += (
+                "--- CURRICULUM SYLLABUS / SOURCE MATERIAL ---\n"
+                f"{req.syllabus_context}\n"
+                "----------------------------------------------\n"
+                "Align questions directly to learning objectives and concepts in the source material.\n\n"
+            )
 
         prompt += (
-    "Formatting & Quality Rules:\n"
-    "1. Allocate marks appropriately (e.g. 1-2 for MCQ/TF, 2-4 for short answer/match/calc, 5-12 for essay).\n"
-    "2. For 'mcq', provide 4 clear options and set 'correct_answer' to the exact matching option string.\n"
-    "3. For 'true_false', set 'correct_answer' to 'True' or 'False' with a 1-sentence justification if false.\n"
-    "4. For 'matching', provide 'left_items' and 'right_items' (shuffled). Set 'correct_answer' to pairs formatted as: Item A -> Match 1; Item B -> Match 2\n"
-    "5. For 'ordering', provide 'items' (shuffled). Set 'correct_answer' to the numbered sequential order.\n"
-    "6. For 'calculation', provide problem context, state expected units in 'expected_units', and clear step-by-step mark breakdown.\n"
-    "7. For 'essay', provide analytical essay prompt with detailed marking rubric criteria in 'correct_answer'.\n"
-         )
+            "Formatting & Quality Rules:\n"
+            "1. Allocate marks appropriately (e.g. 1-2 for MCQ/TF, 2-4 for short answer/match/calc, 5-12 for essay).\n"
+            "2. For 'mcq', provide 4 clear options and set 'correct_answer' to the exact matching option string.\n"
+            "3. For 'true_false', set 'correct_answer' to 'True' or 'False' with a 1-sentence justification if false.\n"
+            "4. For 'matching', provide 'left_items' and 'right_items' (shuffled). Set 'correct_answer' to pairs formatted as: Item A -> Match 1; Item B -> Match 2\n"
+            "5. For 'ordering', provide 'items' (shuffled). Set 'correct_answer' to the numbered sequential order.\n"
+            "6. For 'calculation', provide problem context, state expected units in 'expected_units', and clear step-by-step mark breakdown.\n"
+            "7. For 'essay', provide analytical essay prompt with detailed marking rubric criteria in 'correct_answer'.\n"
+            "8. MATHEMATICAL FORMATTING: Use standard Markdown LaTeX math delimiters ($...$) strictly for inline math variables, expressions, and equations inside text (e.g. 'where $x = 5$').\n"
+            "9. STRICT WORD SPACING RULE: NEVER wrap entire sentences or plain English words in `$` delimiters. Plain English text MUST stay outside LaTeX dollar signs so that word spaces are preserved.\n"
+            "   - CORRECT: 'Calculate the value of $y$ when $x = 4$.'\n"
+            "   - INCORRECT: '$Calculate the value of y when x = 4.$'\n"
+        )
 
         config = types.GenerateContentConfig(
             response_mime_type="application/json",
