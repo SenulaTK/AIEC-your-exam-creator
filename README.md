@@ -1,55 +1,20 @@
-# AIEC — AI Exam Creator & Practice Platform
+AIEC - Your AI exam creator
 
-AIEC is a Streamlit web application powered by **Google Gemini API (`gemini-3.6-flash`)** that automatically generates balanced exam papers from coursework notes, past papers, and mark schemes.
+Instructions:
 
-## 🚀 Features
+-You can access the app on the web by going to aiectk.streamlit.app 
+-Or you can download the entire application by selecting code and downloading the zip.  
+<img width="494" height="392" alt="Screenshot 2026-09-19 at 20 56 39" src="https://github.com/user-attachments/assets/78b3d6f0-c993-467b-8e1c-780d1070ac50" />
+-Make sure all the dependencies(shown in the requirements.txt file) are installed 
+-Once done type in the terminal streamlit run AIEC.py 
 
-- **10 Question Types Supported**:
-  - Multiple Choice (`mcq`)
-  - Short Answer (`short_answer`)
-  - Extended Essay (`essay`)
-  - Matching / Draw-a-Line (`matching`)
-  - Fill-in-the-Blanks (`fill_blank`)
-  - True / False (`true_false`)
-  - Ordering / Sequencing (`ordering`)
-  - Categorization (`categorization`)
-  - Diagram Labeling (`labeling`)
-  - Numerical Calculation (`calculation`)
-- **Teacher Mode**: Includes full mark scheme tables, model answers, and inline scoring keys.
-- **Interactive Practice & AI Auto-Grading**: Students can complete exams directly online and receive instant AI feedback and score breakdowns.
-- **PDF Export Engine**: Generate printable student exam PDFs or full mark scheme PDFs.
-- **Persistent Sidebar Exam History**: Save, load, and manage past exams across browser sessions.
+Introduction:
 
-## 🛠️ Installation & Setup
+-It is a web app made in python and the library streamlit. 
+-It was created by the help of Google Gemini. 
+-It is an exam creator that takes the input you give and uses the Gemini API(https://aistudio.google.com/api-keys) to generate an exam.
+-It can be accessed and written within the exam. 
+-Once done the AI can mark your exam and give recommendations on what areas you need to do. 
 
-1. **Clone the repository**:
-   ```bash
-   git clone <your-github-repo-url>
-   cd <repo-folder>
-   ```
-
-2. **Create and activate a virtual environment**:
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   ```
-
-3. **Install required dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Run the Streamlit application**:
-   ```bash
-   streamlit run AIEC.py
-   ```
-
-## 📦 Requirements
-
-- Python 3.9+
-- Packages listed in `requirements.txt`:
-  - `streamlit`
-  - `google-genai`
-  - `pydantic`
-  - `fpdf2`
-  - `pandas`
+<img width="1800" height="939" alt="Screenshot 2026-09-19 at 21 04 08" src="https://github.com/user-attachments/assets/84e58bed-862e-4553-9c3b-dc5134f1dd13" />
+<img width="1795" height="947" alt="Screenshot 2026-09-19 at 21 04 40" src="https://github.com/user-attachments/assets/c96b4fa3-4b01-41e0-84da-ac1555c336fa" />
