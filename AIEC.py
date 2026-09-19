@@ -25,9 +25,9 @@ from backend.app.config import settings
 from backend.app.models.exam import Question, ExamPaper, GradedQuestion, GradingResponse
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 # FORMATTING & MATH RENDERING HELPERS
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 
 def format_math_latex(text: str) -> str:
     if not text:
@@ -67,12 +67,48 @@ def render_countdown_timer(minutes: int):
     total_seconds = minutes * 60
     remaining_seconds = max(0, int(total_seconds - elapsed_seconds))
 
-    
+    timer_html = f"""
+    <div id="timer-box" style="
+        font-family: sans-serif;
+        font-size: 20px;
+        font-weight: bold;
+        color: #d9534f;
+        background-color: #fdf2f2;
+        border: 2px solid #d9534f;
+        border-radius: 8px;
+        padding: 10px 15px;
+        text-align: center;
+        margin-bottom: 15px;
+    ">
+        ⏱️ Time Remaining: <span id="timer-display">--:--</span>
+    </div>
+    <script>
+        var secondsLeft = {remaining_seconds};
+        function updateTimer() {{
+            var mins = Math.floor(secondsLeft / 60);
+            var secs = secondsLeft % 60;
+            if (secs < 10) secs = "0" + secs;
+            if (mins < 10) mins = "0" + mins;
+            
+            document.getElementById('timer-display').innerHTML = mins + ":" + secs;
+            if (secondsLeft <= 0) {{
+                document.getElementById('timer-box').innerHTML = "⌛ TIME IS UP! Please submit your exam.";
+                document.getElementById('timer-box').style.backgroundColor = "#ff0000";
+                document.getElementById('timer-box').style.color = "#ffffff";
+            }} else {{
+                secondsLeft--;
+            }}
+        }}
+        updateTimer();
+        setInterval(updateTimer, 1000);
+    </script>
+    """
+    components.html(timer_html, height=75)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 # MODEL FALLBACK, SAFE JSON PARSER & ACCESSIBILITY TTS HELPERS
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 
 def safe_parse_json(raw_text: str) -> dict:
     if not raw_text:
@@ -166,9 +202,9 @@ def render_tts_button(text_to_speak: str, button_key: str):
     """
     components.html(tts_html, height=45)
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 # HISTORY HELPERS
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 
 HISTORY_FILE = Path(__file__).parent / "aiec_exam_history.json"
 
@@ -207,9 +243,9 @@ def delete_history_entry(entry_id: str):
     history = [h for h in load_history() if h.get("id") != entry_id]
     HISTORY_FILE.write_text(json.dumps(history, indent=2))
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════��═
 # PDF HELPERS
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 
 def clean_pdf_text(text: str) -> str:
     if not text:
@@ -330,7 +366,7 @@ def build_pdf(exam_data: dict, include_answers: bool = False, candidate_name: st
             for _ in range(4):
                 pdf.cell(0, 7, "", border="B", new_x="LMARGIN", new_y="NEXT")
             unit_str = f" ({q['expected_units']})" if q.get("expected_units") else ""
-            pdf.multi_cell(0, 6, f"Final Answer{unit_str}: _______________________", new_x="LMARGIN", new_y="NEXT")
+            pdf.multi_cell(0, 6, f"Final Answer{unit_str}: _______________________, new_x=\"LMARGIN\", new_y=\"NEXT\")
 
         elif qtype == "essay":
             for _ in range(6):
@@ -351,12 +387,12 @@ def build_pdf(exam_data: dict, include_answers: bool = False, candidate_name: st
 
     return bytes(pdf.output())
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 # MARKED SCRIPT PDF BUILDER
-# ══════════════════════════════════════════════════════════════════════════════
+# ═════════════���══════════════════════════════════════════════════
 
 def build_marked_script_pdf(exam_data: dict, grading_result: dict, student_answers: dict,
-                             candidate_name: str = "", candidate_index: str = "") -> bytes:
+                              candidate_name: str = "", candidate_index: str = "") -> bytes:
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
@@ -370,15 +406,15 @@ def build_marked_script_pdf(exam_data: dict, grading_result: dict, student_answe
 
     pdf.set_font("Helvetica", "B", 16)
     pdf.multi_cell(0, 10, clean_pdf_text(exam_data.get("title", "Exam Paper") + " — MARKED SCRIPT"),
-                   new_x="LMARGIN", new_y="NEXT", align="C")
+                    new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.set_font("Helvetica", "B", 10)
     pdf.multi_cell(0, 6,
-                   clean_pdf_text(f"Candidate: {candidate_name or '___________'}  |  Index: {candidate_index or '___________'}  |  Date: {datetime.datetime.now().strftime('%Y-%m-%d')}"),
-                   new_x="LMARGIN", new_y="NEXT", align="C")
+                    clean_pdf_text(f"Candidate: {candidate_name or '___________'}  |  Index: {candidate_index or '___________'}  |  Date: {datetime.datetime.now().strftime('%Y-%m-%d')}"),
+                    new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.set_font("Helvetica", "B", 12)
     pdf.set_text_color(0, 100, 0)
     pdf.multi_cell(0, 8, clean_pdf_text(f"TOTAL SCORE: {total_awarded} / {total_possible}  ({pct}%)"),
-                   new_x="LMARGIN", new_y="NEXT", align="C")
+                    new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.set_text_color(0, 0, 0)
     pdf.ln(4)
 
@@ -402,8 +438,8 @@ def build_marked_script_pdf(exam_data: dict, grading_result: dict, student_answe
             pdf.set_text_color(180, 0, 0)
             marker = "[INCORRECT]"
         pdf.multi_cell(0, 7,
-                       clean_pdf_text(f"Q{i+1}. [{q.get('question_type','').upper()}] {marker}  {q_score}/{q_max} marks"),
-                       new_x="LMARGIN", new_y="NEXT")
+                        clean_pdf_text(f"Q{i+1}. [{q.get('question_type','').upper()}] {marker}  {q_score}/{q_max} marks"),
+                        new_x="LMARGIN", new_y="NEXT")
         pdf.set_text_color(0, 0, 0)
 
         pdf.set_font("Helvetica", "", 10)
@@ -426,13 +462,13 @@ def build_marked_script_pdf(exam_data: dict, grading_result: dict, student_answe
     return bytes(pdf.output())
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 # ACHIEVEMENT BADGES HELPER
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 
 def compute_badges(graded_qs: list, questions: list, pct: float,
-                   flagged: set, time_taken_secs: int, time_limit_secs: int,
-                   previous_pct: float | None) -> list:
+                    flagged: set, time_taken_secs: int, time_limit_secs: int,
+                    previous_pct: float | None) -> list:
     badges = []
 
     if pct >= 100:
@@ -479,9 +515,9 @@ def compute_badges(graded_qs: list, questions: list, pct: float,
     return badges
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 # AI PERSONALISED STUDY PLAN GENERATOR
-# ══════════════════════════════════════════════════════════════════════════════
+# ══════��═════════════════════════════════════════════════════════
 
 def generate_ai_study_plan(api_key: str, model_name: str, weak_topics: list, exam_title: str) -> str:
     if not api_key or not weak_topics:
@@ -506,19 +542,21 @@ def generate_ai_study_plan(api_key: str, model_name: str, weak_topics: list, exa
         return ""
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 # CUSTOM STYLING & HERO HEADER
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 
 st.write("")
 st.markdown("""
 <style>
-    @import url('[https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap](https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap)');
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap');
     
     /* Import OpenDyslexic Font from CDN */
     @font-face {
         font-family: 'OpenDyslexic';
-        src: url('[https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/fonts/OpenDyslexic-Regular.otf](https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/fonts/OpenDyslexic-Regular.otf)') format('opentype');
+        src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/fonts/OpenDyslexic-Regular.otf') format('opentype');
+        font-weight: 400;
+        font-style: normal;
     }
 
     html, body, [class*="css"] {
@@ -561,18 +599,51 @@ st.markdown("""
     .font-serif, .font-serif * { font-family: 'Cinzel', 'Times New Roman', serif !important; }
     .font-sans, .font-sans * { font-family: 'Inter', sans-serif !important; }
     .font-dyslexic, .font-dyslexic * { font-family: 'OpenDyslexic', sans-serif !important; line-height: 1.6 !important; letter-spacing: 0.05em !important; }
+
+    .exam-custom-heading {
+        margin: 1.5rem 0 1.25rem 0;
+        padding: 1.5rem 2rem;
+        border: 1px solid rgba(129, 140, 248, 0.45);
+        border-radius: 18px;
+        background: linear-gradient(135deg, rgba(49, 46, 129, 0.9), rgba(88, 28, 135, 0.85));
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+        text-align: center;
+    }
+
+    .exam-custom-heading-kicker {
+        color: #c4b5fd;
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        margin-bottom: 0.45rem;
+    }
+
+    .exam-custom-heading h1 {
+        margin: 0;
+        color: #ffffff !important;
+        font-size: 2.2rem;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+
+    .exam-custom-heading-meta {
+        margin-top: 0.65rem;
+        color: #ddd6fe;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
 </style>
 """, unsafe_allow_html=True)
 
 backend_online = is_backend_available()
-status_badge_html = """<span style="background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); font-weight: 700; padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase;">🟢 Cloud Run API Online</span>""" if backend_online else """<span style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); font-weight: 700; padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase;">⚡ Powered by Google Gemini</span>"""
+status_badge_html = """<span style="background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); font-weight: 700; padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 6px;">● Backend online</span>""" if backend_online else """<span style="background: rgba(248, 113, 113, 0.15); color: #fca5a5; border: 1px solid rgba(248, 113, 113, 0.3); font-weight: 700; padding: 4px 10px; border-radius: 9999px; font-size: 0.72rem; display: inline-flex; align-items: center; gap: 6px;">● Local mode</span>"""
 
 st.markdown(f"""
-<div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 24px 30px; margin-bottom: 20px; box-shadow: 0 12px 36px rgba(0, 0, 0, 0.25); backdrop-filter: blur(16px);">
+<div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 24px 30px; margin-bottom: 18px; box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);">
     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
         <div style="display: flex; align-items: center; gap: 18px;">
-            <div style="width: 56px; height: 56px; background: linear-gradient(135deg, #6366f1, #a855f7); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; box-shadow: 0 6px 18px rgba(99, 102, 241, 0.4);">
-               📝
+            <div style="width: 56px; height: 56px; background: linear-gradient(135deg, #6366f1, #a855f7); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 2rem; box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);">
+                📝
             </div>
             <div>
                 <h1 style="margin: 0; font-size: 2.1rem; font-weight: 800; background: linear-gradient(90deg, #818cf8 0%, #c084fc 50%, #f472b6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
@@ -587,15 +658,14 @@ st.markdown(f"""
             {status_badge_html}
         </div>
     </div>
-    
 </div>
 """, unsafe_allow_html=True)
 
 st.write("")
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 # SIDEBAR CONFIGURATION
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 
 st.sidebar.markdown("### ☁️ Set-Up Options")
 
@@ -650,9 +720,9 @@ else:
     exam_time_limit_mins = st.sidebar.number_input("Time Limit (Minutes)", min_value=5, max_value=300, value=45, step=5)
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 # SIDEBAR HISTORY
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 📚 Saved Exam History")
@@ -685,9 +755,9 @@ else:
                         st.session_state["grading_result"] = None
                     st.rerun()
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 # MAIN INPUT FORM & CREATION UI
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 
 has_active_exam = "exam_paper" in st.session_state and st.session_state["exam_paper"] is not None
 
@@ -831,9 +901,9 @@ else:
             st.session_state["flagged_questions"] = set()
             st.rerun()
 
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 # EXAM PAPER DISPLAY & INTERACTIVE PRACTICE MODE
-# ══════════════════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════════════
 
 if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
     exam = st.session_state["exam_paper"]
@@ -841,6 +911,22 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
 
     st.markdown("---")
     st.subheader("📝 Examination Paper Workspace")
+
+    exam_title = str(exam.get("title", "Examination Paper")).strip() or "Examination Paper"
+    exam_subject = str(exam.get("subject", "")).strip()
+    exam_grade = str(exam.get("grade_level", "")).strip()
+    exam_meta = " · ".join(value for value in [exam_subject, exam_grade] if value)
+
+    st.markdown(
+        f"""
+        <div class="exam-custom-heading">
+            <div class="exam-custom-heading-kicker">📝 EXAMINATION PAPER</div>
+            <h1>{exam_title}</h1>
+            {f'<div class="exam-custom-heading-meta">{exam_meta}</div>' if exam_meta else ''}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
     if "exam_answers" not in st.session_state:
         st.session_state["exam_answers"] = {}
@@ -863,7 +949,6 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
                 </div>"""
                 st.markdown(badges_html, unsafe_allow_html=True)
                 
-                # Render question using standard LaTeX logic
                 render_standard_math(q_text_fmt, prefix=f"**Q{i+1}.** ")
                 
             with col_q_flag:
@@ -877,7 +962,7 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
 
             if teacher_mode:
                 st.markdown("---")
-                render_standard_math(q.get('correct_answer', 'N/A'), prefix="💡 **Teacher Key / Criteria:** ")
+                render_standard_math(q.get('correct_answer', 'N/A'), prefix="���� **Teacher Key / Criteria:** ")
 
             if raw_qtype == "mcq" and q.get("options"):
                 opts = [format_math_latex(o) for o in q["options"]]
@@ -983,7 +1068,7 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
             act_col1, act_col2 = st.columns(2)
             with act_col1:
                 with st.popover("💡 Reveal AI Hint"):
-                    st.info(f"**Topic Focus:** `{q.get('topic', 'General Core Concept')}`\n\n💡 **Hint Guidance:** Read carefully and focus on key terminology. Break down your answer into clear, logical steps.")
+                    st.info(f"**Topic Focus:** `{q.get('topic', 'General Core Concept')}`\n\n💡 **Hint Guidance:** Read carefully and focus on key terminology. Break down your answer into clear, structured points using relevant examples.")
             with act_col2:
                 with st.popover("⚙️ Question Options"):
                     regen_inst = st.text_input("Instructions for regeneration:", key=f"regen_inst_{i}", placeholder="e.g. Make it harder")
@@ -1119,17 +1204,17 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
     pass_badge_icon = "✅" if passed else "❌"
 
     hero_html = f"""<div style="background:{banner_grad};border-radius:16px;padding:36px 40px;margin-bottom:28px;position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
-<div style="position:absolute;top:50%;right:40px;transform:translateY(-50%) rotate(-12deg);font-size:3.2rem;font-weight:900;letter-spacing:4px;color:{pass_color};opacity:0.18;pointer-events:none;font-family:'Courier New',monospace;white-space:nowrap;">{pass_label}</div>
+<div style="position:absolute;top:50%;right:40px;transform:translateY(-50%) rotate(-12deg);font-size:3.2rem;font-weight:900;letter-spacing:4px;color:{pass_color};opacity:0.18;pointer-events:none;">{grade_emoji}</div>
 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;">
 <div>
 <div style="color:rgba(255,255,255,0.75);font-size:0.85rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Exam Results Report</div>
 <h2 style="color:#fff;margin:6px 0 2px 0;font-size:1.55rem;font-weight:800;">{exam_title}</h2>
 <div style="color:rgba(255,255,255,0.8);font-size:0.95rem;margin-bottom:14px;">{cand_name_display} {cand_index_display} &nbsp;·&nbsp; {date_display}</div>
-<span style="background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.5);border-radius:50px;padding:8px 22px;color:#fff;font-size:1.05rem;font-weight:700;letter-spacing:0.5px;">{grade_emoji} &nbsp;{grade_str}</span>
+<span style="background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.5);border-radius:50px;padding:8px 22px;color:#fff;font-size:1.05rem;font-weight:700;letter-spacing:0.5px;">{grade_str}</span>
 <span style="margin-left:12px;background:{pass_color};color:{pass_text_color};border-radius:50px;padding:8px 22px;font-size:1rem;font-weight:800;letter-spacing:1px;">{pass_badge_icon} {pass_label}</span>
 </div>
 <div style="text-align:center;">
-<div style="width:130px;height:130px;border-radius:50%;background:conic-gradient(rgba(255,255,255,0.95) {pct}%, rgba(255,255,255,0.15) 0%);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 8px rgba(255,255,255,0.12);margin:0 auto;">
+<div style="width:130px;height:130px;border-radius:50%;background:conic-gradient(rgba(255,255,255,0.95) {pct}%, rgba(255,255,255,0.15) 0%);display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 4px rgba(255,255,255,0.15);">
 <div style="width:100px;height:100px;border-radius:50%;background:rgba(0,0,0,0.25);display:flex;flex-direction:column;align-items:center;justify-content:center;">
 <div style="color:#fff;font-size:1.9rem;font-weight:900;line-height:1;">{pct}%</div>
 <div style="color:rgba(255,255,255,0.75);font-size:0.7rem;margin-top:2px;">SCORE</div>
