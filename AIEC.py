@@ -1,7 +1,6 @@
 import streamlit as st
 
 st.set_page_config(layout="wide", page_title="AIEC — AI Exam Creator & Evaluator", page_icon="📝")
-
 import json
 import os
 import re
@@ -1154,12 +1153,6 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
     pass_color = "#bbf7d0" if passed else "#fecaca"
     pass_text_color = "#166534" if passed else "#991b1b"
 
-    time_limit_secs = int(st.session_state.get("time_limit_mins", 45)) * 60
-    start_ts = st.session_state.get("exam_start_timestamp")
-    time_taken_secs = int(datetime.datetime.now().timestamp() - start_ts) if start_ts else 0
-    time_taken_mins = time_taken_secs // 60
-    time_taken_sec_rem = time_taken_secs % 60
-
     cand_name_val = st.session_state.get("cand_name_input", "")
     cand_index_val = st.session_state.get("cand_index_input", "")
     history = load_history()
@@ -1179,9 +1172,6 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
 
     st.markdown("---")
 
-    cand_name_display = f"<strong>{cand_name_val}</strong>" if cand_name_val else "Candidate"
-    cand_index_display = f"&nbsp;·&nbsp; Index: {cand_index_val}" if cand_index_val else ""
-    date_display = datetime.datetime.now().strftime('%B %d, %Y')
     pass_badge_icon = "✅" if passed else "❌"
 
     hero_html = f"""<div style="background:{banner_grad};border-radius:16px;padding:36px 40px;margin-bottom:28px;position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
