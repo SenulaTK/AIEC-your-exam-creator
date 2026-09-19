@@ -24,6 +24,7 @@ class Question(BaseModel):
 
 class ExamPaper(BaseModel):
     title: str = Field(description="The title of the exam paper.")
+    custom_name: Optional[str] = Field(default=None, description="Custom name for the exam, creator, or candidate.")
     instructions: str = Field(description="Any general instructions for the student.")
     questions: List[Question]
 
