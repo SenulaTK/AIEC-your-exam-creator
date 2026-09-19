@@ -704,14 +704,6 @@ else:
     n_true_false = st.sidebar.slider("True / False", 0, 10, 2)
     n_other = st.sidebar.slider("Other (Ordering/Calc/Labeling)", 0, 5, 1)
 
-st.sidebar.markdown("---")
-st.sidebar.markdown("### ⏱️ Exam Timer")
-timer_auto = st.sidebar.checkbox("Auto Time Limit (AI Decides)", value=True)
-if timer_auto:
-    exam_time_limit_mins = 0
-else:
-    exam_time_limit_mins = st.sidebar.number_input("Time Limit (Minutes)", min_value=5, max_value=300, value=45, step=5)
-
 
 # ════════════════════════════════════════════════════════════════
 # SIDEBAR HISTORY
@@ -833,11 +825,6 @@ if not has_active_exam:
                         f"- Other (Ordering/Calc/Labeling): {n_other}\n"
                     )
 
-                if timer_auto:
-                    prompt += "Determine the recommended exam time limit in minutes based on total marks.\n"
-                else:
-                    prompt += f"Target time limit: {exam_time_limit_mins} minutes.\n"
-
                 if input1:
                     prompt += f"\nUser instructions: {input1}\n"
 
@@ -882,11 +869,7 @@ if not has_active_exam:
                 except Exception as e:
                     st.error(f"Error generating exam paper: {e}")
 else:
-    c_hdr1, c_hdr2 = st.columns([4, 1])
-    with c_hdr1:
-        st.caption("Active Exam Mode")
-    with c_hdr2:
-        if st.button("➕ Create New Exam", use_container_width=True):
+   if st.button("➕ Create New Exam", use_container_width=True):
             st.session_state["exam_paper"] = None
             st.session_state["grading_result"] = None
             st.session_state["active_exam_id"] = None
