@@ -24,6 +24,8 @@ class Question(BaseModel):
 
 class ExamPaper(BaseModel):
     title: str = Field(description="The title of the exam paper.")
+    subject: Optional[str] = Field(default=None, description="The subject of the exam, e.g., 'Biology', 'Computer Science'.")
+    grade_level: Optional[str] = Field(default=None, description="The target grade or level, e.g., 'Grade 10', 'University'.")
     custom_name: Optional[str] = Field(default=None, description="Custom name for the exam, creator, or candidate.")
     instructions: str = Field(description="Any general instructions for the student.")
     questions: List[Question]
