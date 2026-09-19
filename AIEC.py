@@ -1467,7 +1467,7 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
         st.download_button(
             "📄 Download Marked Script (PDF)",
             data=marked_pdf,
-            file_name=f"marked_script_{cand_index_dl or 'candidate'}.pdf",
+            file_name=f"marked_script.pdf",
             mime="application/pdf",
             use_container_width=True,
             type="primary"
@@ -1484,11 +1484,11 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
         st.download_button(
             "📊 Download Performance Report (PDF)",
             data=report_pdf,
-            file_name=f"performance_report_{cand_index_dl or 'candidate'}.pdf",
+            file_name=f"performance_report.pdf",
             mime="application/pdf",
             use_container_width=True
         )
-        st.caption("Full exam paper with mark scheme, topic breakdown summary")
+        st.caption("Full exam paper with mark scheme")
 
     st.markdown("---")
 
