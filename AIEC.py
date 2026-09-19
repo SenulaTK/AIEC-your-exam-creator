@@ -1114,8 +1114,6 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
                                 except Exception as ex:
                                     st.error(f"Failed to regenerate: {ex}")
 
-
-    st.markdown("---")
     
         
     if st.button("📊 Submit & Grade Exam Paper", use_container_width=True, type="primary"):
