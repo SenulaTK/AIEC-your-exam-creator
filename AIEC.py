@@ -1270,7 +1270,6 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
 
     badges = compute_badges(
         graded_qs, questions, pct, flagged_qs,
-        time_taken_secs, time_limit_secs, prev_pct
     )
     if badges:
         st.subheader("🏅 Achievement Badges")
