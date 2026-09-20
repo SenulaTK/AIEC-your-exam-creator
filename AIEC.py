@@ -156,9 +156,9 @@ def render_tts_button(text_to_speak: str, button_key: str):
     """
     components.html(tts_html, height=45)
 
-# ════════════════════════════════════════════════════════════════
+# ═════════════════════════════════════════════════════════���══════
 # HISTORY HELPERS
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════
 
 HISTORY_FILE = Path(__file__).parent / "aiec_exam_history.json"
 
@@ -320,7 +320,7 @@ def build_pdf(exam_data: dict, include_answers: bool = False, candidate_name: st
             for _ in range(4):
                 pdf.cell(0, 7, "", border="B", new_x="LMARGIN", new_y="NEXT")
             unit_str = f" ({q['expected_units']})" if q.get("expected_units") else ""
-            pdf.multi_cell(0, 6, f"Final Answer{unit_str}: _______________________", new_x="LMARGIN", new_y="NEXT")
+            pdf.multi_cell(0, 6, f"Final Answer{unit_str}: _______________________, new_x=\"LMARGIN\", new_y=\"NEXT\")
 
         elif qtype == "essay":
             for _ in range(6):
@@ -346,7 +346,7 @@ def build_pdf(exam_data: dict, include_answers: bool = False, candidate_name: st
 # ════════════════════════════════════════════════════════════════
 
 def build_marked_script_pdf(exam_data: dict, grading_result: dict, student_answers: dict,
-                             candidate_name: str = "", candidate_index: str = "") -> bytes:
+                              candidate_name: str = "", candidate_index: str = "") -> bytes:
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
@@ -360,14 +360,14 @@ def build_marked_script_pdf(exam_data: dict, grading_result: dict, student_answe
 
     pdf.set_font("Helvetica", "B", 16)
     pdf.multi_cell(0, 10, clean_pdf_text(exam_data.get("title", "Exam Paper") + " — MARKED SCRIPT"),
-                   new_x="LMARGIN", new_y="NEXT", align="C")
+                    new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.set_font("Helvetica", "B", 10)
     pdf.multi_cell(0, 6,
-                   new_x="LMARGIN", new_y="NEXT", align="C")
+                    new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.set_font("Helvetica", "B", 12)
     pdf.set_text_color(0, 100, 0)
     pdf.multi_cell(0, 8, clean_pdf_text(f"TOTAL SCORE: {total_awarded} / {total_possible}  ({pct}%)"),
-                   new_x="LMARGIN", new_y="NEXT", align="C")
+                    new_x="LMARGIN", new_y="NEXT", align="C")
     pdf.set_text_color(0, 0, 0)
     pdf.ln(4)
 
@@ -391,8 +391,8 @@ def build_marked_script_pdf(exam_data: dict, grading_result: dict, student_answe
             pdf.set_text_color(180, 0, 0)
             marker = "[INCORRECT]"
         pdf.multi_cell(0, 7,
-                       clean_pdf_text(f"Q{i+1}. [{q.get('question_type','').upper()}] {marker}  {q_score}/{q_max} marks"),
-                       new_x="LMARGIN", new_y="NEXT")
+                        clean_pdf_text(f"Q{i+1}. [{q.get('question_type','').upper()}] {marker}  {q_score}/{q_max} marks"),
+                        new_x="LMARGIN", new_y="NEXT")
         pdf.set_text_color(0, 0, 0)
 
         pdf.set_font("Helvetica", "", 10)
@@ -544,10 +544,10 @@ st.markdown("""
 backend_online = is_backend_available()
 
 st.markdown(f"""
-<div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 24px 30px; margin-bottom: 18px; box-shadow: 0 20px 40px rgba(15, 23, 42, 0.25);">
+<div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 24px 30px; margin-bottom: 20px; box-shadow: 0 18px 40px rgba(15, 23, 42, 0.28);">
     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
         <div style="display: flex; align-items: center; gap: 18px;">
-            <div style="width: 56px; height: 56px; background: linear-gradient(135deg, #6366f1, #a855f7); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 2rem; box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);">
+            <div style="width: 56px; height: 56px; background: linear-gradient(135deg, #6366f1, #a855f7); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; box-shadow: inset 0 2px 6px rgba(255,255,255,0.2);">
                 📝
             </div>
             <div>
@@ -583,7 +583,7 @@ selected_model = "gemini-3.8-flash"
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🎭 Mode")
-teacher_mode = st.sidebar.toggle("Teacher Mode", value=False, help="Shows full mark schemes, inline correct answers, and criteria. Hides timer.")
+teacher_mode = st.sidebar.toggle("Teacher Mode", value=False, help="Shows full mark schemes, inline correct answers, and criteria.")
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### ⚙️ Paper Settings")
@@ -639,7 +639,6 @@ else:
                     st.session_state["exam_paper"] = h.get("exam")
                     st.session_state["grading_result"] = h.get("results")
                     st.session_state["active_exam_id"] = h_id
-                    st.session_state["exam_start_timestamp"] = datetime.datetime.now().timestamp()
                     st.rerun()
             with c_del:
                 if st.button("Delete", key=f"sb_del_{h_id}", use_container_width=True):
@@ -651,7 +650,7 @@ else:
 
 # ════════════════════════════════════════════════════════════════
 # MAIN INPUT FORM & CREATION UI
-# ════════════════════════════════════════════════════════════════
+# ════════════════════════════════════════════════════════
 
 has_active_exam = "exam_paper" in st.session_state and st.session_state["exam_paper"] is not None
 
@@ -767,10 +766,6 @@ if not has_active_exam:
                     st.session_state["exam_answers"] = {}
                     st.session_state["grading_result"] = None
                     st.session_state["flagged_questions"] = set()
-                    st.session_state["time_limit_mins"] = (
-                        exam_time_limit_mins if not timer_auto else max(15, len(exam.get("questions", [])) * 4)
-                    )
-                    st.session_state["exam_start_timestamp"] = datetime.datetime.now().timestamp()
                     e_id = save_to_history(exam)
                     st.session_state["active_exam_id"] = e_id
                     st.success("Exam paper generated successfully!")
@@ -778,11 +773,10 @@ if not has_active_exam:
                 except Exception as e:
                     st.error(f"Error generating exam paper: {e}")
 else:
-   if st.button("➕ Create New Exam", use_container_width=True):
+    if st.button("➕ Create New Exam", use_container_width=True):
             st.session_state["exam_paper"] = None
             st.session_state["grading_result"] = None
             st.session_state["active_exam_id"] = None
-            st.session_state["exam_start_timestamp"] = None
             st.session_state["flagged_questions"] = set()
             st.rerun()
 
@@ -958,7 +952,7 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
             act_col1, act_col2 = st.columns(2)
             with act_col1:
                 with st.popover("💡 Reveal AI Hint"):
-                    st.info(f"**Topic Focus:** `{q.get('topic', 'General Core Concept')}`\n\n💡 **Hint Guidance:** Read carefully and focus on key terminology. Break down your answer into clear, structured points using relevant examples.")
+                    st.info(f"**Topic Focus:** `{q.get('topic', 'General Core Concept')}`\n\n💡 **Hint Guidance:** Read carefully and focus on key terminology. Break down your answer into clear points and support it with examples where appropriate.")
             with act_col2:
                 with st.popover("⚙️ Question Options"):
                     regen_inst = st.text_input("Instructions for regeneration:", key=f"regen_inst_{i}", placeholder="e.g. Make it harder")
@@ -1094,7 +1088,7 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
 <span style="margin-left:12px;background:{pass_color};color:{pass_text_color};border-radius:50px;padding:8px 22px;font-size:1rem;font-weight:800;letter-spacing:1px;">{pass_badge_icon} {pass_label}</span>
 </div>
 <div style="text-align:center;">
-<div style="width:130px;height:130px;border-radius:50%;background:conic-gradient(rgba(255,255,255,0.95) {pct}%, rgba(255,255,255,0.15) 0%);display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 4px rgba(255,255,255,0.15);">
+<div style="width:130px;height:130px;border-radius:50%;background:conic-gradient(rgba(255,255,255,0.95) {pct}%, rgba(255,255,255,0.15) 0%);display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 8px rgba(255,255,255,0.15);">
 <div style="width:100px;height:100px;border-radius:50%;background:rgba(0,0,0,0.25);display:flex;flex-direction:column;align-items:center;justify-content:center;">
 <div style="color:#fff;font-size:1.9rem;font-weight:900;line-height:1;">{pct}%</div>
 <div style="color:rgba(255,255,255,0.75);font-size:0.7rem;margin-top:2px;">SCORE</div>
@@ -1347,7 +1341,6 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
         if st.button("🔄 Retake This Exam", use_container_width=True, type="primary"):
             st.session_state["exam_answers"] = {}
             st.session_state["grading_result"] = None
-            st.session_state["exam_start_timestamp"] = None
             st.session_state["flagged_questions"] = set()
             st.rerun()
 
