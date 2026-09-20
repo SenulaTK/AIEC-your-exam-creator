@@ -619,6 +619,7 @@ else:
                     st.session_state["grading_result"] = h.get("results")
                     st.session_state["active_exam_id"] = h_id
                     st.session_state["exam_start_timestamp"] = datetime.datetime.now().timestamp()
+                    st.session_state["flagged_questions"] = set()
                     st.rerun()
             with c_del:
                 if st.button("Delete", key=f"sb_del_{h_id}", use_container_width=True):
@@ -796,6 +797,9 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
 
     if "exam_answers" not in st.session_state:
         st.session_state["exam_answers"] = {}
+        
+    if "flagged_questions" not in st.session_state:
+        st.session_state["flagged_questions"] = set()
 
     for i, q in enumerate(questions):
         raw_qtype = q.get("question_type", "written").lower()
