@@ -588,7 +588,7 @@ else:
     n_mcq = st.sidebar.slider("Multiple Choice (MCQ)", 0, 15, 3)
     n_short = st.sidebar.slider("Short Answer", 0, 10, 3)
     n_essay = st.sidebar.slider("Extended Essay", 0, 5, 1)
-    n_matching = st.sidebar.slider("Matching (Draw Line)", 0, 5, 1)
+    n_matching = st.sidebar.slider("Matching", 0, 5, 1)
     n_true_false = st.sidebar.slider("True / False", 0, 10, 2)
     n_other = st.sidebar.slider("Other (Ordering/Calc/Labeling)", 0, 5, 1)
 
