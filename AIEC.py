@@ -559,9 +559,6 @@ st.markdown(f"""
                 </p>
             </div>
         </div>
-        <div>
-            {status_badge_html}
-        </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
