@@ -1281,7 +1281,7 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
             include_answers=True
         )
         st.download_button(
-            "📊 Download Performance Report (PDF)",
+            "📊 Download Paper with Mark Scheme (PDF)",
             data=report_pdf,
             file_name=f"performance_report.pdf",
             mime="application/pdf",
