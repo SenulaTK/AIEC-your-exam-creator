@@ -562,7 +562,7 @@ selected_model = "gemini-3.8-flash"
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🎭 Mode")
-teacher_mode = st.sidebar.toggle("Teacher Mode", value=False, help="Shows full mark schemes, inline correct answers, and criteria. Hides timer.")
+teacher_mode = st.sidebar.toggle("Teacher Mode", value=False, help="Shows full mark schemes, inline correct answers, and criteria.")
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### ⚙️ Paper Settings")
