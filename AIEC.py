@@ -227,7 +227,7 @@ def clean_pdf_text(text: str) -> str:
     return text.encode('latin-1', 'replace').decode('latin-1')
 
 
-def build_pdf(exam_data: dict, include_answers: bool = False, candidate_name: str = "", candidate_index: str = "") -> bytes:
+def build_pdf(exam_data: dict, include_answers: bool = False) -> bytes:
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
@@ -239,11 +239,7 @@ def build_pdf(exam_data: dict, include_answers: bool = False, candidate_name: st
     title = clean_pdf_text(exam_data.get("title", "Exam Paper"))
     pdf.multi_cell(0, 10, title, new_x="LMARGIN", new_y="NEXT", align="C")
     
-    pdf.set_font("Helvetica", "B", 10)
-    name_str = clean_pdf_text(f"Candidate Name: {candidate_name if candidate_name else '_______________________'}")
-    index_str = clean_pdf_text(f"Index No: {candidate_index if candidate_index else '____________'}")
-    pdf.multi_cell(0, 6, f"{name_str}    {index_str}    Date: {datetime.datetime.now().strftime('%Y-%m-%d')}", new_x="LMARGIN", new_y="NEXT", align="C")
-    pdf.ln(2)
+    p
 
     pdf.set_font("Helvetica", "", 11)
     if exam_data.get("instructions"):
@@ -346,7 +342,7 @@ def build_pdf(exam_data: dict, include_answers: bool = False, candidate_name: st
 # ════════════════════════════════════════════════════════════════
 
 def build_marked_script_pdf(exam_data: dict, grading_result: dict, student_answers: dict,
-                             candidate_name: str = "", candidate_index: str = "") -> bytes:
+                            ) -> bytes:
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
