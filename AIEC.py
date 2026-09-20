@@ -1,6 +1,3 @@
-import streamlit as st
-
-st.set_page_config(layout="wide", page_title="AIEC — AI Exam Creator & Evaluator", page_icon="📝")
 import json
 import os
 import re
@@ -12,6 +9,7 @@ from typing import List, Optional
 
 import pandas as pd
 import plotly.graph_objects as go
+import streamlit as st
 import streamlit.components.v1 as components
 from fpdf import FPDF
 from google import genai
@@ -23,6 +21,7 @@ from backend.app.services.gemini_service import GeminiService
 from backend.app.config import settings
 from backend.app.models.exam import Question, ExamPaper, GradedQuestion, GradingResponse
 
+st.set_page_config(layout="wide", page_title="AIEC — AI Exam Creator & Evaluator", page_icon="📝")
 
 # ════════════════════════════════════════════════════════════════
 # FORMATTING & MATH RENDERING HELPERS
@@ -57,9 +56,6 @@ def render_standard_math(text: str, prefix: str = ""):
         st.latex(raw_math)
     else:
         st.markdown(f"{prefix}{clean_text}")
-
-
-
 
 # ════════════════════════════════════════════════════════════════
 # MODEL FALLBACK, SAFE JSON PARSER & ACCESSIBILITY TTS HELPERS
@@ -226,7 +222,6 @@ def clean_pdf_text(text: str) -> str:
 
     return text.encode('latin-1', 'replace').decode('latin-1')
 
-
 def build_pdf(exam_data: dict, include_answers: bool = False) -> bytes:
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
@@ -238,8 +233,6 @@ def build_pdf(exam_data: dict, include_answers: bool = False) -> bytes:
     pdf.set_font("Helvetica", "B", 16)
     title = clean_pdf_text(exam_data.get("title", "Exam Paper"))
     pdf.multi_cell(0, 10, title, new_x="LMARGIN", new_y="NEXT", align="C")
-    
-    p
 
     pdf.set_font("Helvetica", "", 11)
     if exam_data.get("instructions"):
@@ -341,8 +334,7 @@ def build_pdf(exam_data: dict, include_answers: bool = False) -> bytes:
 # MARKED SCRIPT PDF BUILDER
 # ════════════════════════════════════════════════════════════════
 
-def build_marked_script_pdf(exam_data: dict, grading_result: dict, student_answers: dict,
-                            ) -> bytes:
+def build_marked_script_pdf(exam_data: dict, grading_result: dict, student_answers: dict) -> bytes:
     pdf = FPDF()
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
@@ -410,13 +402,6 @@ def build_marked_script_pdf(exam_data: dict, grading_result: dict, student_answe
 
     return bytes(pdf.output())
 
-
-# ════════════════════════════════════════════════════════════════
-# ACHIEVEMENT BADGES HELPER
-# ════════════════════════════════════════════════════════════════
-
-
-
 # ════════════════════════════════════════════════════════════════
 # AI PERSONALISED STUDY PLAN GENERATOR
 # ════════════════════════════════════════════════════════════════
@@ -442,7 +427,6 @@ def generate_ai_study_plan(api_key: str, model_name: str, weak_topics: list, exa
         return resp.text.strip() if resp and resp.text else ""
     except Exception:
         return ""
-
 
 # ════════════════════════════════════════════════════════════════
 # CUSTOM STYLING & HERO HEADER
@@ -575,7 +559,6 @@ api_key = st.sidebar.text_input(
     help="Get your Google Gemini API key here: [https://aistudio.google.com/api-keys](https://aistudio.google.com/api-keys)"
 )
 selected_model = "gemini-3.8-flash"
-
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🎭 Mode")
@@ -763,9 +746,6 @@ if not has_active_exam:
                     st.session_state["exam_answers"] = {}
                     st.session_state["grading_result"] = None
                     st.session_state["flagged_questions"] = set()
-                    st.session_state["time_limit_mins"] = (
-                        exam_time_limit_mins if not timer_auto else max(15, len(exam.get("questions", [])) * 4)
-                    )
                     st.session_state["exam_start_timestamp"] = datetime.datetime.now().timestamp()
                     e_id = save_to_history(exam)
                     st.session_state["active_exam_id"] = e_id
@@ -996,8 +976,6 @@ if "exam_paper" in st.session_state and st.session_state["exam_paper"]:
                                 except Exception as ex:
                                     st.error(f"Failed to regenerate: {ex}")
 
-    
-        
     if st.button("📊 Submit & Grade Exam Paper", use_container_width=True, type="primary"):
         if not api_key:
             st.error("Please enter your Gemini API Key in the sidebar or configure Secret Manager.")
@@ -1059,8 +1037,6 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
     pass_color = "#bbf7d0" if passed else "#fecaca"
     pass_text_color = "#166534" if passed else "#991b1b"
 
-    cand_name_val = st.session_state.get("cand_name_input", "")
-    cand_index_val = st.session_state.get("cand_index_input", "")
     history = load_history()
     exam_title = exam.get("title", "")
     prev_pct = None
@@ -1173,7 +1149,6 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
         st.dataframe(pd.DataFrame(table_rows), use_container_width=True, hide_index=True)
 
     st.markdown("---")
-
 
     if prev_entry:
         st.subheader("📊 Comparison with Previous Attempt")
@@ -1297,16 +1272,11 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
     st.subheader("📥 Download Your Results")
     dl1, dl2 = st.columns(2)
 
-    cand_name_dl = st.session_state.get("cand_name_input", "")
-    cand_index_dl = st.session_state.get("cand_index_input", "")
-
     with dl1:
         marked_pdf = build_marked_script_pdf(
             exam_data=exam,
             grading_result=g_res,
-            student_answers=st.session_state.get("exam_answers", {}),
-            candidate_name=cand_name_dl,
-            candidate_index=cand_index_dl
+            student_answers=st.session_state.get("exam_answers", {})
         )
         st.download_button(
             "📄 Download Marked Script (PDF)",
@@ -1321,9 +1291,7 @@ if "grading_result" in st.session_state and st.session_state["grading_result"]:
     with dl2:
         report_pdf = build_pdf(
             exam_data=exam,
-            include_answers=True,
-            candidate_name=cand_name_dl,
-            candidate_index=cand_index_dl
+            include_answers=True
         )
         st.download_button(
             "📊 Download Performance Report (PDF)",
